@@ -1,0 +1,72 @@
+[
+  {
+    "region_id": "all",
+    "name": "All monitored regions (Global composite)",
+    "bbox": [
+      -130,
+      -25,
+      45,
+      52
+    ],
+    "date_min": "2021-01-01",
+    "date_max": "2025-12-31",
+    "biome": "Multi-biome global harmonization benchmark",
+    "description": "Combined active-fire series across Mediterranean, Amazonia, Western North America, and Sudano-Sahelian benchmark regions."
+  },
+  {
+    "region_id": "med-east",
+    "name": "Eastern Mediterranean & Levant",
+    "bbox": [
+      19.5,
+      31,
+      37.5,
+      41.5
+    ],
+    "date_min": "2021-01-01",
+    "date_max": "2025-12-31",
+    "biome": "Mediterranean sclerophyllous forests & shrublands",
+    "description": "High summer desiccation regime driven by Etesian winds and marine heatwaves across Greece, Anatolia, Cyprus, and the Levant coast."
+  },
+  {
+    "region_id": "amazon-south",
+    "name": "Southern Amazonia Arc",
+    "bbox": [
+      -67,
+      -15.5,
+      -48,
+      -4
+    ],
+    "date_min": "2021-01-01",
+    "date_max": "2025-12-31",
+    "biome": "Moist tropical broadleaf forest & agricultural frontier",
+    "description": "Pronounced dry-season biomass burning corridor along the BR-163 and Trans-Amazonian frontier peaking August through October."
+  },
+  {
+    "region_id": "west-na",
+    "name": "Western North America",
+    "bbox": [
+      -124.8,
+      32.5,
+      -110,
+      49
+    ],
+    "date_min": "2021-01-01",
+    "date_max": "2025-12-31",
+    "biome": "Temperate coniferous forest & chaparral",
+    "description": "High-FRP crown fire regime across the Sierra Nevada, Cascades, and Northern Rockies with late-summer vapor pressure deficit spikes."
+  },
+  {
+    "region_id": "congo-basin",
+    "name": "Northern Congo & Sudano-Sahelian Belt",
+    "bbox": [
+      14,
+      2,
+      31,
+      11.5
+    ],
+    "date_min": "2021-01-01",
+    "date_max": "2025-12-31",
+    "biome": "Tropical savanna & forest-savanna mosaic",
+    "description": "Boreal winter dry-season savanna fire belt (December–February) characterized by high VIIRS low-FRP perimeter detections."
+  }
+]

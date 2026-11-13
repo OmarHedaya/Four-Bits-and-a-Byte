@@ -1,0 +1,51 @@
+[
+  {
+    "start_date": "2023-08-18",
+    "end_date": "2023-08-29",
+    "region_id": "med-east",
+    "score": 4.68,
+    "reason": "Dadia-Evros complex (largest recorded EU wildfire footprint): sustained gale-force Etesian winds produced record 375 m VIIRS cluster density and +4.68 sigma radiative power surge."
+  },
+  {
+    "start_date": "2021-07-28",
+    "end_date": "2021-08-12",
+    "region_id": "med-east",
+    "score": 4.42,
+    "reason": "Extreme Eastern Mediterranean heat dome (+46 C surface air temperature) triggered synchronous megafires in Evia, Antalya, and Mugla with VIIRS detecting 3.9x night-time perimeter expansion vs MODIS."
+  },
+  {
+    "start_date": "2024-08-24",
+    "end_date": "2024-09-14",
+    "region_id": "amazon-south",
+    "score": 4.15,
+    "reason": "Severe multi-year soil moisture deficit across Southern Amazonia & Pantanal border; high-confidence understory fires detected by VIIRS 375 m I-band beneath dense smoke canopy."
+  },
+  {
+    "start_date": "2021-08-04",
+    "end_date": "2021-08-22",
+    "region_id": "west-na",
+    "score": 3.94,
+    "reason": "Northern California & Cascade pyrocumulonimbus outbreak (Dixie & Monument complexes): extreme nighttime FRP persistence captured by NOAA-20/Suomi-NPP 01:30 LT overpasses."
+  },
+  {
+    "start_date": "2025-07-19",
+    "end_date": "2025-07-31",
+    "region_id": "med-east",
+    "score": 3.62,
+    "reason": "Prolonged flash-drought and low nocturnal relative humidity (<18%) across Peloponnese, Cyprus, and coastal Levant drove rapid early-season crown fire spread."
+  },
+  {
+    "start_date": "2025-09-02",
+    "end_date": "2025-09-15",
+    "region_id": "west-na",
+    "score": 3.48,
+    "reason": "Late-summer dry lightning siege paired with 99th-percentile vapor pressure deficit across Idaho and Oregon timber stands."
+  },
+  {
+    "start_date": "2024-01-09",
+    "end_date": "2024-01-21",
+    "region_id": "congo-basin",
+    "score": 3.21,
+    "reason": "Strong Harmattan wind surge accelerated Sudano-Sahelian savanna flame fronts, driving a sharp divergence between VIIRS 375 m small-fire counts and MODIS 1 km detections."
+  }
+]
