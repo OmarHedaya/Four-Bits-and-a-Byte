@@ -46,7 +46,7 @@ export const TAGLINE: string =
   (env.VITE_TAGLINE as string | undefined) ||
   'Harmonized MODIS & VIIRS active-fire mission-control instrument';
 
-export const LOGO: string = '/logo-thermal-orbit.svg';
+export const LOGO: string = '/logo-satellite-fire.jpg';
 
 export const TEAM_NAMES: readonly TeamMember[] = [
   {

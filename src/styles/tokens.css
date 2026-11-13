@@ -1,0 +1,93 @@
+/**
+ * Phase F1: Mission-Control Design Tokens (Orbital Aerospace & Night Instrument Theme)
+ *
+ * Combines the required NASA Space Apps tokens with the deep-space orbital aesthetic
+ * from the Satellite Company Website Figma design:
+ * - Chrome stays calm (Night #0B1220, Panel #131C2E, Line #26344D, Orbital Cobalt #2438A8)
+ * - Heat color is reserved strictly for fire intensity (Thermal Ramp #1a2140 -> #FFF1B8)
+ * - Sensor identity uses exclusively Teal (#3CC4C4 for MODIS) and Lavender (#B79CFF for VIIRS)
+ */
+
+:root {
+  /* Core Surfaces & Chrome */
+  --bg-night: #0B1220;
+  --bg-night-deep: #070C16;
+  --bg-night-elevated: #0E1729;
+  --bg-panel: #131C2E;
+  --bg-panel-glass: rgba(19, 28, 46, 0.78);
+  --bg-panel-hover: #18243A;
+  --bg-panel-active: #1E2D4A;
+  --border-line: #26344D;
+  --border-line-strong: #3B5178;
+  --border-glass: rgba(126, 157, 255, 0.18);
+
+  /* Orbital Aerospace Interactive Accents (from Figma Satellite theme, non-thermal) */
+  --orbital-cobalt: #2438A8;
+  --orbital-cobalt-hover: #2E46C2;
+  --orbital-periwinkle: #7E9DFF;
+  --orbital-pill-bg: rgba(28, 42, 82, 0.62);
+  --orbital-pill-border: rgba(93, 123, 222, 0.36);
+
+  /* Typography Colors (WCAG AA compliant against #0B1220 and #131C2E) */
+  --text-primary: #E6ECF5;
+  --text-bright: #FFFFFF;
+  --text-muted: #8FA0BA;
+  --text-subtle: #647590;
+
+  /* Sensor Identity Colors (Never mixed with thermal ramp) */
+  --sensor-modis: #3CC4C4;
+  --sensor-modis-bg: rgba(60, 196, 196, 0.14);
+  --sensor-viirs: #B79CFF;
+  --sensor-viirs-bg: rgba(183, 156, 255, 0.14);
+
+  /* 7-Stop Infrared Thermal Intensity Ramp (Calendar & Map Heat Only) */
+  --ramp-0: #1a2140;
+  --ramp-1: #2B2F7E;
+  --ramp-2: #7A2E8E;
+  --ramp-3: #C9306B;
+  --ramp-4: #F26B2D;
+  --ramp-5: #FFC247;
+  --ramp-6: #FFF1B8;
+  --thermal-gradient: linear-gradient(
+    90deg,
+    #1a2140 0%,
+    #2B2F7E 16.6%,
+    #7A2E8E 33.3%,
+    #C9306B 50%,
+    #F26B2D 66.6%,
+    #FFC247 83.3%,
+    #FFF1B8 100%
+  );
+
+  /* Elevation & Specular Lighting */
+  --shadow-panel: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 10px 28px rgba(4, 8, 18, 0.5);
+  --shadow-hero: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 14px 36px rgba(4, 8, 18, 0.65);
+
+  /* Typography Scale (Sentence case only, no uppercase transforms) */
+  --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.8125rem;   /* 13px */
+  --text-base: 0.875rem;  /* 14px */
+  --text-md: 1rem;        /* 16px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.375rem;    /* 22px */
+  --text-2xl: 1.75rem;    /* 28px */
+
+  /* Spacing & Radii */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
+
+  /* Focus Ring */
+  --focus-ring: 0 0 0 2px #0B1220, 0 0 0 4px #3CC4C4;
+}
