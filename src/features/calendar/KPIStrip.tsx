@@ -10,6 +10,16 @@ export interface KPIStripProps {
 export function KPIStrip({ kpis, sensor, metric }: KPIStripProps) {
   const unitLabel = metric === 'count' ? 'hotspots' : 'MW';
 
+  const kpiCardStyle = {
+    background: 'linear-gradient(180deg, rgba(10, 15, 26, 0.56) 0%, rgba(15, 22, 38, 0.76) 100%)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 214, 138, 0.2)',
+    boxShadow: 'inset 0 1px 0 rgba(255, 241, 184, 0.08), 0 8px 24px rgba(4, 7, 15, 0.45)',
+    borderRadius: 'var(--radius-md)',
+    padding: '11px 14px',
+  } as const;
+
   return (
     <div
       className="tabular-nums"
@@ -20,14 +30,7 @@ export function KPIStrip({ kpis, sensor, metric }: KPIStripProps) {
       }}
     >
       {/* 1. Harmonized Hotspots */}
-      <div
-        style={{
-          backgroundColor: 'rgba(11, 18, 32, 0.72)',
-          border: '1px solid var(--border-line)',
-          borderRadius: 'var(--radius-md)',
-          padding: '10px 13px',
-        }}
-      >
+      <div style={kpiCardStyle}>
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
           Harmonized fire clusters
         </div>
@@ -47,14 +50,7 @@ export function KPIStrip({ kpis, sensor, metric }: KPIStripProps) {
       </div>
 
       {/* 2. Integrated Radiative Power */}
-      <div
-        style={{
-          backgroundColor: 'rgba(11, 18, 32, 0.72)',
-          border: '1px solid var(--border-line)',
-          borderRadius: 'var(--radius-md)',
-          padding: '10px 13px',
-        }}
-      >
+      <div style={kpiCardStyle}>
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
           Cumulative radiative power
         </div>
@@ -74,14 +70,7 @@ export function KPIStrip({ kpis, sensor, metric }: KPIStripProps) {
       </div>
 
       {/* 3. MODIS vs VIIRS Sensor Split */}
-      <div
-        style={{
-          backgroundColor: 'rgba(11, 18, 32, 0.72)',
-          border: '1px solid var(--border-line)',
-          borderRadius: 'var(--radius-md)',
-          padding: '10px 13px',
-        }}
-      >
+      <div style={kpiCardStyle}>
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
           Raw sensor detections
         </div>
@@ -108,14 +97,7 @@ export function KPIStrip({ kpis, sensor, metric }: KPIStripProps) {
       </div>
 
       {/* 4. Peak Activity & Anomaly Days */}
-      <div
-        style={{
-          backgroundColor: 'rgba(11, 18, 32, 0.72)',
-          border: '1px solid var(--border-line)',
-          borderRadius: 'var(--radius-md)',
-          padding: '10px 13px',
-        }}
-      >
+      <div style={kpiCardStyle}>
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
           Peak daily {sensor} ({unitLabel})
         </div>

@@ -1,9 +1,9 @@
 /**
- * Phase F1: Mission-Control Design Tokens (Orbital Aerospace & Night Instrument Theme)
+ * Phase F1: Mission-Control Design Tokens (Galactic Orbital & Night Instrument Theme)
  *
- * Combines the required NASA Space Apps tokens with the deep-space orbital aesthetic
- * from the Satellite Company Website Figma design:
- * - Chrome stays calm (Night #0B1220, Panel #131C2E, Line #26344D, Orbital Cobalt #2438A8)
+ * Harmonized around the user's Orbital Satellite & Milky Way background (/bg-orbital-milkyway.jpg):
+ * - Top-to-bottom atmospheric visibility gradient: vivid Milky Way gold & violet at the top,
+ *   fading smoothly into deep Night (#0B1220) and Panel (#131C2E) at the bottom.
  * - Heat color is reserved strictly for fire intensity (Thermal Ramp #1a2140 -> #FFF1B8)
  * - Sensor identity uses exclusively Teal (#3CC4C4 for MODIS) and Lavender (#B79CFF for VIIRS)
  */
@@ -11,27 +11,30 @@
 :root {
   /* Core Surfaces & Chrome */
   --bg-night: #0B1220;
-  --bg-night-deep: #070C16;
+  --bg-night-deep: #060A12;
   --bg-night-elevated: #0E1729;
   --bg-panel: #131C2E;
-  --bg-panel-glass: rgba(19, 28, 46, 0.78);
+  --bg-panel-glass: rgba(15, 22, 38, 0.72);
   --bg-panel-hover: #18243A;
   --bg-panel-active: #1E2D4A;
   --border-line: #26344D;
   --border-line-strong: #3B5178;
-  --border-glass: rgba(126, 157, 255, 0.18);
+  --border-glass: rgba(255, 214, 138, 0.2);
 
-  /* Orbital Aerospace Interactive Accents (from Figma Satellite theme, non-thermal) */
-  --orbital-cobalt: #2438A8;
-  --orbital-cobalt-hover: #2E46C2;
-  --orbital-periwinkle: #7E9DFF;
-  --orbital-pill-bg: rgba(28, 42, 82, 0.62);
-  --orbital-pill-border: rgba(93, 123, 222, 0.36);
+  /* Galactic Orbital Accents (Drawn from the Milky Way Satellite background) */
+  --orbital-cobalt: #263B9E;
+  --orbital-cobalt-hover: #314BC4;
+  --orbital-periwinkle: #9BB2FF;
+  --orbital-gold: #FFC247;
+  --orbital-starlight: #FFF1B8;
+  --orbital-amber-glow: rgba(255, 194, 71, 0.24);
+  --orbital-pill-bg: rgba(18, 26, 48, 0.68);
+  --orbital-pill-border: rgba(255, 194, 71, 0.36);
 
-  /* Typography Colors (WCAG AA compliant against #0B1220 and #131C2E) */
+  /* Typography Colors (WCAG AA compliant against #0B1220, #131C2E, and translucent glass) */
   --text-primary: #E6ECF5;
   --text-bright: #FFFFFF;
-  --text-muted: #8FA0BA;
+  --text-muted: #98A8C2;
   --text-subtle: #647590;
 
   /* Sensor Identity Colors (Never mixed with thermal ramp) */
@@ -59,9 +62,9 @@
     #FFF1B8 100%
   );
 
-  /* Elevation & Specular Lighting */
-  --shadow-panel: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 10px 28px rgba(4, 8, 18, 0.5);
-  --shadow-hero: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 14px 36px rgba(4, 8, 18, 0.65);
+  /* Elevation & Specular Starlight Lighting */
+  --shadow-panel: inset 0 1px 0 rgba(255, 241, 184, 0.08), 0 12px 32px rgba(4, 7, 15, 0.55);
+  --shadow-hero: inset 0 1px 0 rgba(255, 241, 184, 0.16), 0 16px 40px rgba(4, 7, 15, 0.72), 0 0 28px rgba(242, 107, 45, 0.12);
 
   /* Typography Scale (Sentence case only, no uppercase transforms) */
   --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

@@ -30,11 +30,12 @@ export function TopBar({ isDemoData }: TopBarProps) {
   return (
     <header
       style={{
-        backgroundColor: 'rgba(13, 19, 33, 0.84)',
-        backdropFilter: 'blur(18px)',
-        WebkitBackdropFilter: 'blur(18px)',
-        borderBottom: '1px solid rgba(59, 81, 120, 0.45)',
-        boxShadow: '0 4px 24px rgba(4, 8, 18, 0.45)',
+        background:
+          'linear-gradient(180deg, rgba(6, 10, 18, 0.42) 0%, rgba(10, 16, 28, 0.62) 100%)',
+        backdropFilter: 'blur(10px) saturate(135%)',
+        WebkitBackdropFilter: 'blur(10px) saturate(135%)',
+        borderBottom: '1px solid rgba(255, 194, 71, 0.24)',
+        boxShadow: '0 6px 28px rgba(4, 7, 15, 0.45)',
         padding: '10px 18px',
         display: 'flex',
         alignItems: 'center',
@@ -60,12 +61,12 @@ export function TopBar({ isDemoData }: TopBarProps) {
         >
           <div
             style={{
-              width: '40px',
-              height: '40px',
+              width: '42px',
+              height: '42px',
               borderRadius: '10px',
               overflow: 'hidden',
-              border: '1px solid rgba(242, 107, 45, 0.55)',
-              boxShadow: '0 0 14px rgba(242, 107, 45, 0.25)',
+              border: '1px solid rgba(255, 194, 71, 0.65)',
+              boxShadow: '0 0 16px rgba(242, 107, 45, 0.32)',
               flexShrink: 0,
               backgroundColor: '#0B1220',
             }}
@@ -73,8 +74,8 @@ export function TopBar({ isDemoData }: TopBarProps) {
             <img
               src={PLACEHOLDERS.LOGO}
               alt={`${PLACEHOLDERS.PROJECT_NAME} satellite-fire emblem`}
-              width={40}
-              height={40}
+              width={42}
+              height={42}
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
           </div>
@@ -89,6 +90,7 @@ export function TopBar({ isDemoData }: TopBarProps) {
                 color: 'var(--text-bright)',
                 letterSpacing: '-0.015em',
                 lineHeight: 1.2,
+                textShadow: '0 2px 8px rgba(0, 0, 0, 0.65)',
               }}
             >
               <span>{PLACEHOLDERS.PROJECT_NAME}</span>
@@ -97,7 +99,15 @@ export function TopBar({ isDemoData }: TopBarProps) {
                 Terra · Aqua · S-NPP · NOAA-20
               </span>
             </div>
-            <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', lineHeight: 1.25, marginTop: '2px' }}>
+            <div
+              style={{
+                fontSize: '11.5px',
+                color: '#C8D4E8',
+                lineHeight: 1.25,
+                marginTop: '2px',
+                textShadow: '0 1px 6px rgba(0, 0, 0, 0.7)',
+              }}
+            >
               Next-generation satellite earth observation &amp; active-fire harmonization
             </div>
           </div>
@@ -113,7 +123,7 @@ export function TopBar({ isDemoData }: TopBarProps) {
         )}
       </div>
 
-      {/* Center: 5 Demo Screens Navigation (Figma Satellite Cobalt Pill Active State) */}
+      {/* Center: 5 Demo Screens Navigation (Galactic Gold + Orbital Indigo Pill Active State) */}
       <nav
         aria-label="Primary views"
         style={{
@@ -121,10 +131,11 @@ export function TopBar({ isDemoData }: TopBarProps) {
           alignItems: 'center',
           gap: '4px',
           flexWrap: 'wrap',
-          backgroundColor: 'rgba(11, 18, 32, 0.65)',
-          border: '1px solid rgba(59, 81, 120, 0.38)',
+          backgroundColor: 'rgba(8, 13, 24, 0.56)',
+          border: '1px solid rgba(255, 214, 138, 0.22)',
           borderRadius: '10px',
           padding: '3px',
+          boxShadow: 'inset 0 1px 0 rgba(255, 241, 184, 0.08)',
         }}
       >
         {NAV_ITEMS.map((item) => (
@@ -138,15 +149,15 @@ export function TopBar({ isDemoData }: TopBarProps) {
               fontSize: 'var(--text-sm)',
               fontWeight: isActive ? 600 : 500,
               textDecoration: 'none',
-              color: isActive ? '#FFFFFF' : 'var(--text-muted)',
+              color: isActive ? '#FFF1B8' : 'var(--text-primary)',
               background: isActive
-                ? 'linear-gradient(135deg, #273B9E 0%, #1E2E82 100%)'
+                ? 'linear-gradient(135deg, rgba(242, 107, 45, 0.28) 0%, rgba(46, 70, 194, 0.65) 100%)'
                 : 'transparent',
               border: isActive
-                ? '1px solid rgba(126, 157, 255, 0.45)'
+                ? '1px solid rgba(255, 194, 71, 0.55)'
                 : '1px solid transparent',
               boxShadow: isActive
-                ? 'inset 0 1px 0 rgba(255,255,255,0.16), 0 2px 10px rgba(36, 56, 168, 0.35)'
+                ? 'inset 0 1px 0 rgba(255, 241, 184, 0.22), 0 2px 12px rgba(242, 107, 45, 0.22)'
                 : undefined,
             })}
           >

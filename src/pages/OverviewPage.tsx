@@ -79,7 +79,7 @@ export function OverviewPage({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-      {/* Orbital Telemetry Header inspired by Figma Satellite Company Website */}
+      {/* Orbital Telemetry Header showcasing the Milky Way Satellite backdrop */}
       <section className="orbital-telemetry-banner">
         <div
           style={{
@@ -94,12 +94,12 @@ export function OverviewPage({
             <img
               src={PLACEHOLDERS.LOGO}
               alt="Orbital satellite wildfire emblem"
-              width={58}
-              height={58}
+              width={64}
+              height={64}
               style={{
                 borderRadius: '14px',
-                border: '1px solid rgba(242, 107, 45, 0.6)',
-                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.55)',
+                border: '1px solid rgba(255, 194, 71, 0.68)',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.65), 0 0 18px rgba(242, 107, 45, 0.28)',
               }}
             />
             <div>
@@ -112,11 +112,12 @@ export function OverviewPage({
               <h1
                 style={{
                   margin: 0,
-                  fontSize: 'var(--text-xl)',
+                  fontSize: 'var(--text-2xl)',
                   fontWeight: 600,
                   color: 'var(--text-bright)',
                   letterSpacing: '-0.02em',
-                  lineHeight: 1.25,
+                  lineHeight: 1.2,
+                  textShadow: '0 2px 14px rgba(0, 0, 0, 0.75)',
                 }}
               >
                 Monitoring global fire activity{' '}
@@ -124,13 +125,14 @@ export function OverviewPage({
               </h1>
               <p
                 style={{
-                  margin: '4px 0 0',
+                  margin: '5px 0 0',
                   fontSize: 'var(--text-sm)',
-                  color: 'var(--text-muted)',
+                  color: '#D5DFEE',
                   maxWidth: '720px',
+                  textShadow: '0 1px 8px rgba(0, 0, 0, 0.8)',
                 }}
               >
-                Active scope: <strong style={{ color: 'var(--text-primary)' }}>{activeRegionName}</strong> ({yearRange[0]}–{yearRange[1]}) ·{' '}
+                Active scope: <strong style={{ color: '#FFF1B8' }}>{activeRegionName}</strong> ({yearRange[0]}–{yearRange[1]}) ·{' '}
                 {dailyRecords.length.toLocaleString()} harmonized daily records
               </p>
             </div>

@@ -19,22 +19,22 @@ export function Button({
 }: ButtonProps) {
   const bgMap: Record<NonNullable<ButtonProps['variant']>, string> = {
     primary: active
-      ? 'linear-gradient(135deg, #2E46C2 0%, #2438A8 100%)'
-      : 'linear-gradient(135deg, #273B9E 0%, #1E2E82 100%)',
-    secondary: active ? 'var(--bg-panel-active)' : 'rgba(19, 28, 46, 0.78)',
-    ghost: active ? 'rgba(93, 123, 222, 0.18)' : 'transparent',
-    thermal: 'rgba(242, 107, 45, 0.18)',
+      ? 'linear-gradient(135deg, rgba(242, 107, 45, 0.42) 0%, rgba(49, 75, 196, 0.85) 100%)'
+      : 'linear-gradient(135deg, rgba(242, 107, 45, 0.28) 0%, rgba(39, 59, 158, 0.82) 100%)',
+    secondary: active ? 'var(--bg-panel-active)' : 'rgba(15, 22, 38, 0.72)',
+    ghost: active ? 'rgba(255, 194, 71, 0.16)' : 'transparent',
+    thermal: 'rgba(242, 107, 45, 0.2)',
   };
 
   const borderMap: Record<NonNullable<ButtonProps['variant']>, string> = {
-    primary: active ? '#7E9DFF' : 'rgba(126, 157, 255, 0.45)',
-    secondary: active ? 'var(--orbital-periwinkle)' : 'var(--border-line)',
-    ghost: active ? 'rgba(126, 157, 255, 0.4)' : 'transparent',
+    primary: active ? '#FFC247' : 'rgba(255, 194, 71, 0.52)',
+    secondary: active ? 'var(--orbital-gold)' : 'rgba(255, 214, 138, 0.2)',
+    ghost: active ? 'rgba(255, 194, 71, 0.4)' : 'transparent',
     thermal: '#F26B2D',
   };
 
   const colorMap: Record<NonNullable<ButtonProps['variant']>, string> = {
-    primary: '#FFFFFF',
+    primary: '#FFF1B8',
     secondary: active ? 'var(--text-bright)' : 'var(--text-primary)',
     ghost: active ? 'var(--text-bright)' : 'var(--text-muted)',
     thermal: '#FFC247',

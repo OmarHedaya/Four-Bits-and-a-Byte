@@ -18,6 +18,7 @@ export function AppShell({
 }: AppShellProps) {
   return (
     <div className="app-shell">
+      <div className="orbital-bg-stage" aria-hidden="true" />
       <TopBar isDemoData={isDemoData} />
       <div className={hideRail ? 'app-body app-body--no-rail' : 'app-body'}>
         {!hideRail && <FilterRail regions={regions} />}

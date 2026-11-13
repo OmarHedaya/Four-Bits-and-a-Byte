@@ -24,10 +24,11 @@ export function Card({
   return (
     <Component
       style={{
-        backgroundColor: 'var(--bg-panel-glass)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        border: `1px solid ${heroBorder ? 'rgba(242, 107, 45, 0.65)' : 'var(--border-line)'}`,
+        background:
+          'linear-gradient(180deg, rgba(14, 21, 36, 0.72) 0%, rgba(19, 28, 46, 0.88) 100%)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        border: `1px solid ${heroBorder ? 'rgba(255, 194, 71, 0.52)' : 'rgba(255, 214, 138, 0.14)'}`,
         borderRadius: 'var(--radius-lg)',
         boxShadow: heroBorder ? 'var(--shadow-hero)' : 'var(--shadow-panel)',
         display: 'flex',
@@ -45,9 +46,9 @@ export function Card({
             justifyContent: 'space-between',
             gap: '12px',
             padding: '13px 18px',
-            borderBottom: '1px solid rgba(38, 52, 77, 0.85)',
+            borderBottom: '1px solid rgba(255, 214, 138, 0.12)',
             background:
-              'linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0) 100%)',
+              'linear-gradient(180deg, rgba(255, 241, 184, 0.04) 0%, rgba(255, 255, 255, 0) 100%)',
             flexWrap: 'wrap',
           }}
         >

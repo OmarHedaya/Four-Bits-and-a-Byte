@@ -39,8 +39,10 @@ export function AudienceModeBanner({ mode }: AudienceModeBannerProps) {
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: '10px',
-        backgroundColor: 'rgba(19, 28, 46, 0.72)',
-        border: '1px solid rgba(93, 123, 222, 0.3)',
+        background: 'linear-gradient(90deg, rgba(10, 15, 26, 0.56) 0%, rgba(16, 24, 42, 0.68) 100%)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        border: '1px solid rgba(255, 214, 138, 0.22)',
         borderRadius: 'var(--radius-md)',
         padding: '9px 14px',
       }}

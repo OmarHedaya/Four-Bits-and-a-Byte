@@ -50,8 +50,11 @@ export function FilterRail({ regions }: FilterRailProps) {
     <aside
       aria-label="Global mission-control filters"
       style={{
-        backgroundColor: 'var(--bg-panel)',
-        borderRight: '1px solid var(--border-line)',
+        background:
+          'linear-gradient(180deg, rgba(8, 13, 24, 0.44) 0%, rgba(13, 20, 35, 0.78) 45%, rgba(19, 28, 46, 0.96) 82%, #131C2E 100%)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderRight: '1px solid rgba(255, 214, 138, 0.16)',
         padding: '14px',
         display: 'flex',
         flexDirection: 'column',
