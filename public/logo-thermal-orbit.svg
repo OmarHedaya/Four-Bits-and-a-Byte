@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="14" fill="#131C2E" stroke="#26344D" stroke-width="2"/>
+  <circle cx="32" cy="32" r="21" stroke="#3CC4C4" stroke-width="2" stroke-dasharray="5 4" opacity="0.85"/>
+  <ellipse cx="32" cy="32" rx="25" ry="11" transform="rotate(-28 32 32)" stroke="#B79CFF" stroke-width="2" opacity="0.9"/>
+  <path d="M32 15C36.5 22 43 26.5 43 35.5C43 41.8513 38.0751 47 32 47C25.9249 47 21 41.8513 21 35.5C21 30.2 24.4 25.8 27.2 22.8C27.4 26.2 29.5 28 31.2 28.5C29.8 24.2 30.4 19.2 32 15Z" fill="url(#thermal)"/>
+  <circle cx="48" cy="20" r="3" fill="#3CC4C4"/>
+  <circle cx="16" cy="44" r="3" fill="#B79CFF"/>
+  <defs>
+    <linearGradient id="thermal" x1="32" y1="47" x2="32" y2="15" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7A2E8E"/>
+      <stop offset="35%" stop-color="#C9306B"/>
+      <stop offset="65%" stop-color="#F26B2D"/>
+      <stop offset="88%" stop-color="#FFC247"/>
+      <stop offset="100%" stop-color="#FFF1B8"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,0 +1,72 @@
+[
+  {
+    "window": "July 20 – August 31 (Peak Etesian Window)",
+    "region_id": "med-east",
+    "risk_score": 94,
+    "drivers": [
+      "Persistent Etesian NE winds (25–45 kt)",
+      "10-hour dead fuel moisture < 6%",
+      "Marine heatwave suppressing nocturnal humidity recovery"
+    ],
+    "start_month": 7,
+    "end_month": 8
+  },
+  {
+    "window": "August 15 – October 10 (Dry-Season Clearing Peak)",
+    "region_id": "amazon-south",
+    "risk_score": 91,
+    "drivers": [
+      "Cumulative dry-season rainfall deficit (>180 mm anomaly)",
+      "Slash-and-burn agricultural frontier ignitions",
+      "Canopy desiccation enabling understory fire escape"
+    ],
+    "start_month": 8,
+    "end_month": 10
+  },
+  {
+    "window": "August 01 – September 25 (Late-Summer VPD Surge)",
+    "region_id": "west-na",
+    "risk_score": 89,
+    "drivers": [
+      "Extreme Vapor Pressure Deficit (VPD > 4.5 kPa)",
+      "Dry thunderstorm lightning outbreaks over cured timber",
+      "Early autumn offshore downslope wind transitions"
+    ],
+    "start_month": 8,
+    "end_month": 9
+  },
+  {
+    "window": "December 20 – February 10 (Harmattan Savanna Window)",
+    "region_id": "congo-basin",
+    "risk_score": 82,
+    "drivers": [
+      "Harmattan dry continental airflow from the Sahara",
+      "Cured C4 tall-grass biomass continuity",
+      "High diurnal spread rate between 11:00 and 16:00 LT"
+    ],
+    "start_month": 12,
+    "end_month": 2
+  },
+  {
+    "window": "June 15 – July 19 (Early Summer Curing Transition)",
+    "region_id": "med-east",
+    "risk_score": 76,
+    "drivers": [
+      "Rapid herbaceous fuel curing following spring growth",
+      "Subtropical ridge intrusion across Eastern Mediterranean"
+    ],
+    "start_month": 6,
+    "end_month": 7
+  },
+  {
+    "window": "October 05 – November 15 (Offshore Wind Season)",
+    "region_id": "west-na",
+    "risk_score": 78,
+    "drivers": [
+      "Santa Ana & Diablo katabatic offshore wind events",
+      "Delayed onset of autumn Pacific storm track precipitation"
+    ],
+    "start_month": 10,
+    "end_month": 11
+  }
+]

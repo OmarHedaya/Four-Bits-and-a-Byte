@@ -1,0 +1,254 @@
+@import './tokens.css';
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-night);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular numerals for all numbers, KPIs, tables, tooltips, and axes */
+.tabular-nums,
+table,
+td,
+th,
+time,
+output,
+.metric-value {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Accessible visible keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--sensor-modis);
+  outline-offset: 2px;
+}
+
+/* Custom subtle scrollbars for dark mission-control panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-night);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-line);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-line-strong);
+}
+
+/* App Shell Layout with Orbital Milky Way Backdrop (Top Most Visible -> Bottom Not Visible) */
+.app-shell {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-night);
+  color: var(--text-primary);
+  isolation: isolate;
+}
+
+/*
+ * Dedicated Milky Way & Satellite Backdrop Stage:
+ * - Most visible at the top (0% - 30%) so the satellite silhouette & golden-violet galaxy core
+ *   shine vividly behind the top navigation bar and hero banner.
+ * - Progressively shaded through the middle (35% - 75%).
+ * - Completely fades out (0% opacity / solid #0B1220) toward the bottom.
+ */
+.orbital-bg-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 920px;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(6, 10, 18, 0.08) 0%,
+      rgba(8, 13, 24, 0.22) 22%,
+      rgba(11, 18, 32, 0.52) 48%,
+      rgba(11, 18, 32, 0.84) 74%,
+      rgba(11, 18, 32, 0.97) 90%,
+      #0B1220 100%
+    ),
+    radial-gradient(
+      ellipse 90% 60% at 50% 18%,
+      rgba(255, 194, 71, 0.12) 0%,
+      rgba(183, 156, 255, 0.08) 45%,
+      transparent 80%
+    ),
+    url('/bg-orbital-milkyway.jpg');
+  background-size: 100% 100%, 100% 100%, cover;
+  background-position: center top, center top, center 16%;
+  background-repeat: no-repeat;
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.94) 24%,
+    rgba(0, 0, 0, 0.68) 50%,
+    rgba(0, 0, 0, 0.28) 74%,
+    rgba(0, 0, 0, 0.06) 90%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.94) 24%,
+    rgba(0, 0, 0, 0.68) 50%,
+    rgba(0, 0, 0, 0.28) 74%,
+    rgba(0, 0, 0, 0.06) 90%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+.app-body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 256px minmax(0, 1fr);
+  flex: 1;
+  min-height: calc(100vh - 64px);
+}
+
+.app-body--no-rail {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Galactic gold-to-periwinkle headline gradient matching the Milky Way core */
+.orbital-headline-accent {
+  background: linear-gradient(92deg, #FFF1B8 0%, #FFC247 36%, #B79CFF 74%, #3CC4C4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Translucent Hero Banner at the top of Overview showcasing the Milky Way Satellite backdrop */
+.orbital-telemetry-banner {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      105deg,
+      rgba(6, 10, 18, 0.56) 0%,
+      rgba(11, 18, 32, 0.24) 46%,
+      rgba(6, 10, 18, 0.58) 100%
+    );
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 194, 71, 0.34);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 241, 184, 0.2),
+    0 14px 36px rgba(4, 7, 15, 0.62);
+  padding: 20px 24px;
+}
+
+.orbital-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, rgba(242, 107, 45, 0.2) 0%, rgba(183, 156, 255, 0.2) 100%);
+  border: 1px solid rgba(255, 194, 71, 0.42);
+  color: #FFF1B8;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* Overview Mission-Control Grid matching frontend_plan_v2_rtl.html (.mock) */
+.overview-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-areas:
+    "cal cal"
+    "map side"
+    "chart side";
+  align-items: stretch;
+}
+
+.overview-area-cal {
+  grid-area: cal;
+  min-width: 0;
+}
+
+.overview-area-map {
+  grid-area: map;
+  min-width: 0;
+}
+
+.overview-area-side {
+  grid-area: side;
+  min-width: 0;
+}
+
+.overview-area-chart {
+  grid-area: chart;
+  min-width: 0;
+}
+
+/* Calendar cell left-to-right load animation (the single deliberate motion) */
+@keyframes cellReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.calendar-cell-animated {
+  animation: cellReveal 260ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .calendar-cell-animated {
+    animation: none !important;
+  }
+}
+
+/* Responsive breakpoints down to 360px phones */
+@media (max-width: 1120px) {
+  .overview-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "cal"
+      "map"
+      "chart"
+      "side";
+  }
+}
+
+@media (max-width: 860px) {
+  .app-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
