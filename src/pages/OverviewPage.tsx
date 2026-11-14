@@ -121,7 +121,7 @@ export function OverviewPage({
                 }}
               >
                 Egypt Thermal Anomaly &amp;{' '}
-                <span className="orbital-headline-accent">Fire Activity Index (FAI)</span>
+                <span className="orbital-headline-accent">Fire Activity Monitor</span>
               </h1>
               <p
                 style={{
@@ -133,7 +133,7 @@ export function OverviewPage({
                 }}
               >
                 Active scope: <strong style={{ color: '#FFF1B8' }}>{activeRegionName}</strong> ({yearRange[0]}–{yearRange[1]}) ·{' '}
-                {dailyRecords.length.toLocaleString()} calendar days · 254,175 harmonized FIRMS rows on a 0.05° × 0.05° grid
+                {dailyRecords.length.toLocaleString()} calendar days · Unified MODIS &amp; VIIRS satellite hotspot intelligence
               </p>
             </div>
           </div>
@@ -145,26 +145,19 @@ export function OverviewPage({
               icon={<ArrowRight size={14} />}
               onClick={() => navigate('/explore')}
             >
-              Open Egypt 0.05° map
-            </Button>
-            <Button
-              variant="thermal"
-              size="sm"
-              onClick={() => navigate('/atlas')}
-            >
-              Phase 6 Atlas (28 figures)
+              Open Egypt map
             </Button>
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => navigate('/method')}
+              onClick={() => navigate('/patterns')}
             >
-              Method &amp; validation
+              Seasonal patterns
             </Button>
           </div>
         </div>
 
-        {/* Phase 5 Headline Fire Activity Index (FAI) Trajectory Bar */}
+        {/* Multi-Year Fire Activity Trajectory Bar */}
         <div
           className="tabular-nums"
           style={{
@@ -185,13 +178,13 @@ export function OverviewPage({
             }}
           >
             <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-              Frozen Baseline v1 (NOAA-20 ∪ S-NPP)
+              Primary Hotspot Zone
             </div>
             <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: '#FFF1B8', marginTop: '2px' }}>
-              B = 32.50 cell-days/day
+              Nile Delta &amp; Cairo
             </div>
             <div style={{ fontSize: '11px', color: '#8FA0BA' }}>
-              337 matched dates (1,011 usable days)
+              Peak season: September – October
             </div>
           </div>
 
@@ -204,13 +197,13 @@ export function OverviewPage({
             }}
           >
             <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-              2023 Headline FAI (359 usable days)
+              2023 Fire Activity
             </div>
             <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: '#F26B2D', marginTop: '2px' }}>
-              FAI 126.0 · 14,699 cell-days
+              Index 126.0 · 14,699 active cells
             </div>
             <div style={{ fontSize: '11px', color: '#8FA0BA' }}>
-              Peak month: Oct 2023 (FAI = 325.9)
+              Peak month: October 2023
             </div>
           </div>
 
@@ -223,13 +216,13 @@ export function OverviewPage({
             }}
           >
             <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-              2024 Headline FAI (346 usable days)
+              2024 Fire Activity
             </div>
             <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: '#B79CFF', marginTop: '2px' }}>
-              FAI 98.7 · 11,099 cell-days
+              Index 98.7 · 11,099 active cells
             </div>
             <div style={{ fontSize: '11px', color: '#8FA0BA' }}>
-              -23.3% vs 2023 · Oct 2024 FAI = 204.1
+              -23.3% compared to 2023
             </div>
           </div>
 
@@ -242,13 +235,13 @@ export function OverviewPage({
             }}
           >
             <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-              2025 Headline FAI (363 usable days)
+              2025 Fire Activity
             </div>
             <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: '#3CC4C4', marginTop: '2px' }}>
-              FAI 73.5 · 8,665 cell-days
+              Index 73.5 · 8,665 active cells
             </div>
             <div style={{ fontSize: '11px', color: '#4ADE80' }}>
-              -40.6% vs 2023 (excl3x3: -43.3%)
+              -40.6% decline since 2023
             </div>
           </div>
         </div>
@@ -355,6 +348,7 @@ export function OverviewPage({
             style={{ height: '100%' }}
           >
             <AnomalyRiskPanel
+              expandToFill
               anomalies={anomalies}
               riskPeriods={riskPeriods}
               regions={regions}

@@ -77,6 +77,7 @@ export function SegmentedToggle<T extends string>({
                 borderRadius: 'var(--radius-sm)',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
+                transition: 'all 180ms cubic-bezier(0.22, 1, 0.36, 1)',
               }}
             >
               {opt.dotColor && (

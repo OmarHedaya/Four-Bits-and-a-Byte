@@ -15,17 +15,29 @@ const env = import.meta.env ?? {};
 
 /**
  * Environment switch:
- * - false: Real Egypt 2023–2025 FireScope dataset is embedded and active by default
- * - true: Only when explicitly forced via VITE_USE_MOCK='true'
+ * - false (default): Fetch the real FireScope harmonized JSON/GeoJSON files from DATA_BASE_URL
+ * - true: Use the deterministic seeded mock data generator (unit tests and offline demos only)
  */
 export const USE_MOCK: boolean =
   env.VITE_USE_MOCK === undefined ? false : String(env.VITE_USE_MOCK).toLowerCase() === 'true';
 
 /**
+ * Time span covered by the delivered dataset (Egypt, FIRMS MODIS + VIIRS).
+ * Keep in sync with data/web_export/region_meta.json (date_min / date_max).
+ */
+export const DATA_WINDOW = {
+  minYear: 2023,
+  maxYear: 2025,
+  latestDate: '2025-12-31',
+  /** Days (ending at latestDate) that the Responder preset highlights. */
+  responderDays: 14,
+} as const;
+
+/**
  * Base URL for harmonized data files (local folder under public/ or remote API)
  */
 export const DATA_BASE_URL: string =
-  (env.VITE_DATA_BASE_URL as string | undefined)?.replace(/\/+$/, '') || '/sample-data';
+  (env.VITE_DATA_BASE_URL as string | undefined)?.replace(/\/+$/, '') || '/data';
 
 /**
  * MapLibre GL dark basemap style URL and optional API key
@@ -40,79 +52,83 @@ export const MAP_KEY: string = (env.VITE_MAP_KEY as string | undefined) || '';
  * Project branding & team metadata placeholders
  */
 export const PROJECT_NAME: string =
-  (env.VITE_PROJECT_NAME as string | undefined) || 'MODIS & VIIRS Harmonizer';
+  (env.VITE_PROJECT_NAME as string | undefined) || 'FIRMS Harmonizer';
 
 export const TAGLINE: string =
   (env.VITE_TAGLINE as string | undefined) ||
-  'FireScope Egypt (2023–2025) · MODIS & VIIRS (S-NPP, NOAA-20, NOAA-21) Harmonization & Fire Activity Index';
+  'MODIS & VIIRS active-fire activity over Egypt, 2023–2025';
 
 export const LOGO: string = '/logo-satellite-fire.jpg';
 
 export const TEAM_NAMES: readonly TeamMember[] = [
   {
-    name: 'Four-Bits-and-a-Byte — Phase 1–3 Data Engineering & Harmonization',
-    role: 'Schema Audit, Cleaning & 0.05° Grid Harmonization',
-    focus: '254,175 NASA FIRMS rows across MODIS, S-NPP, NOAA-20, and NOAA-21 harmonized onto a 0.05° × 0.05° spatial grid and 1,096-day coverage calendar',
+    name: 'Four-Bits-and-a-Byte — Front-End & Visual Analytics Lead',
+    role: 'Front-End Architecture & D3/WebGL Visualization',
+    focus: 'Mission-control UI, multi-year fire calendar heatmap, MapLibre GL layers, and data contract validation',
   },
   {
-    name: 'Four-Bits-and-a-Byte — Phase 4 Spatio-Temporal & Sensor Analytics',
-    role: 'Cross-Sensor Co-Occurrence, Static Thermal Sources & 1° Blocks',
-    focus: 'Separating 84,689 Type 0 vegetation fire candidates from 168,263 Type 2 persistent industrial/flare detections and 96 multi-year hotspot clusters',
+    name: 'Four-Bits-and-a-Byte — Earth Observation Data Scientist',
+    role: 'Sensor Harmonization & Spatio-Temporal Clustering',
+    focus: 'MODIS (1 km) & VIIRS (375 m) co-registration, FRP scaling factor calibration, and confidence alignment',
   },
   {
-    name: 'Four-Bits-and-a-Byte — Phase 5 Fire Activity Index (FAI) & Baseline v1',
-    role: 'Frozen Baseline v1 Index & Sensitivity Diagnostics',
-    focus: 'Matched-day baseline calibration (B = 32.4975 cell-days/day), static 3×3 exclusion sensitivity (excl3x3), confidence sensitivity (excl_low), and coverage factor kappa',
+    name: 'Four-Bits-and-a-Byte — Statistical Modeling & Anomaly Lead',
+    role: 'Climatology, Seasonality & Risk Scoring',
+    focus: 'Z-score anomaly detection, seasonal fire regimes, and responder/planner risk window forecasting',
   },
   {
-    name: 'Four-Bits-and-a-Byte — Phase 6 Scientific Atlas & Interactive Frontend',
-    role: 'Mission-Control Web Platform & 28-Figure Scientific Atlas',
-    focus: 'Interactive multi-year fire calendar, MapLibre GL Egypt 0.05° spatial workbench, and publication-grade Phase 6 visualization suite',
+    name: 'Four-Bits-and-a-Byte — Data Engineering & Pipeline Lead',
+    role: 'FIRMS Ingestion & Pre-Aggregation Pipeline',
+    focus: 'NASA FIRMS archival processing, GeoJSON grid aggregation, and static/API contract delivery',
+  },
+  {
+    name: 'Four-Bits-and-a-Byte — Domain Research & Science Communicator',
+    role: 'Wildfire Operations & Validation Documentation',
+    focus: 'Responder/Scientist/Planner workflow design, sensor limitation analysis, and mission storytelling',
   },
 ] as const;
 
 /**
- * Explanation of confidence mapping, 0.05° cell-day harmonization, and physical sensor rules
+ * How the two sensors' confidence fields and the harmonized counts are handled.
+ * Written from the FireScope project reports (phases 1-5); keep in sync with them.
  */
 export const CONF_MAPPING_TEXT = {
   summary:
-    'In FireScope Egypt (2023–2025), MODIS (Collection 6.1, ~1,000 m pixel) reports fire detection confidence as a numeric percentage (0–100%, mean 67.7% across 3,457 vegetation candidate rows), whereas VIIRS (375 m I-band on S-NPP, NOAA-20, and NOAA-21) reports categorical classes: low ("l", ~12.5–13.3%), nominal ("n", ~83.2–84.5%), and high ("h", ~2.6–3.4%). Both sensor families are mapped onto a unified three-tier confidence taxonomy (`low`, `nominal`, `high`) and aggregated onto a common 0.05° × 0.05° (~5 km) spatial grid.',
+    'MODIS reports detection confidence as a number from 0 to 100, while VIIRS reports three classes: low ("l"), nominal ("n") and high ("h"). The two scales are not equivalent, so FireScope does not convert one into the other: VIIRS classes are never turned into numbers, and MODIS numeric confidence is not used in the activity indices. Confidence is kept as reported and used only as a sensitivity check (an index that drops VIIRS "low" detections).',
   tiers: [
     {
       tier: 'Low confidence',
       code: 'low' as const,
-      modisRule: '0% <= confidence < 30%',
-      viirsRule: 'class === "l" (12.5%–13.3% of VIIRS Type 0 rows; daytime sun-glint or weak thermal edge)',
-      harmonizedWeight: 0.25,
+      modisRule: 'Numeric 0–100, kept as reported (not mapped)',
+      viirsRule: 'class "l" — about 13% of VIIRS vegetation-fire candidates',
       treatment:
-        'Included in the headline_N20_SNPP_core_all series; explicitly tested via the N20_SNPP_core_excl_low sensitivity series (8.6% of cell-days have only low-confidence detections).',
+        'Kept in all counts. A sensitivity index that excludes VIIRS "l" shows how much the result depends on weak detections.',
     },
     {
       tier: 'Nominal confidence',
       code: 'nominal' as const,
-      modisRule: '30% <= confidence < 80% (MODIS mean = 67.7%)',
-      viirsRule: 'class === "n" (83.2%–84.5% of VIIRS Type 0 rows; standard active fire pixel)',
-      harmonizedWeight: 1.0,
-      treatment:
-        'Core component of both headline_N20_SNPP_core_all and N20_SNPP_core_excl_low cell-day presence series on the 0.05° × 0.05° grid.',
+      modisRule: 'Numeric 0–100, kept as reported (not mapped)',
+      viirsRule: 'class "n" — about 84% of VIIRS vegetation-fire candidates',
+      treatment: 'Kept in all counts and in the sensitivity index.',
     },
     {
       tier: 'High confidence',
       code: 'high' as const,
-      modisRule: '80% <= confidence <= 100%',
-      viirsRule: 'class === "h" (2.6%–3.4% of VIIRS Type 0 rows; intense 4 µm brightness temperature anomaly)',
-      harmonizedWeight: 1.0,
+      modisRule: 'Numeric 0–100, kept as reported (not mapped)',
+      viirsRule: 'class "h" — about 3% of VIIRS vegetation-fire candidates',
       treatment:
-        'Included in all core and high-confidence series; prioritized for immediate responder hotspot verification.',
+        'high_conf_share in the daily summary is the share of that day’s VIIRS detections with class "h". It is 0 on days without VIIRS detections.',
     },
   ],
   spatialTemporalRule:
-    'Raw detection counts across MODIS (~1 km) and the three VIIRS instruments (~375 m) are NEVER summed as independent fires because a single burn or flare generates multiple pixel detections across overlapping swaths. Instead, FireScope defines a 0.05° × 0.05° (~5 km) cell-day presence indicator: one grid cell on one UTC calendar day with ≥1 qualifying Type 0 detection counts as 1 cell-day. The headline Fire Activity Index (FAI) uses the NOAA-20 ∪ S-NPP union relative to frozen baseline v1 (B = 32.4975 cell-days/day over 337 matched calendar dates).',
+    'Detections are placed on a 0.05° grid. A cell on one UTC date with at least one detection from any sensor is one “cell-day” and is counted once, however many sensors or passes saw it. That cell-day count is the harmonized series (count_merged). MODIS (~1 km) and VIIRS (~375 m) detections are never added together as independent fires, and raw VIIRS counts add up S-NPP, NOAA-20 and NOAA-21 passes that often see the same fire.',
   limitations: [
-    '65.6%–69.3% of raw VIIRS detections in Egypt (168,263 rows across 267 cells) are Type 2 persistent static thermal sources (gas flares, refineries, cement kilns) and 33.4% of Type 0 candidate cell-days fall within a 3×3 cell neighborhood of a static source; always compare core FAI against the excl3x3 sensitivity series.',
-    'Unusable sensor days (such as NOAA-21 prior to its 2023-03-01 science start and S-NPP’s 19-day source gap in July 2024) are treated strictly as missing coverage (kappa < 1), never zero-filled.',
-    'Daytime detections (peaking 10:00–12:00 UTC / 12:00–14:00 Cairo local time) declined by 53.2% from 2023 to 2025 on matched days, whereas nighttime detections (23:00–00:00 UTC / 01:00–02:00 Cairo) declined by 30.4%, reflecting stronger daytime agricultural burning reductions vs persistent nocturnal industrial heat.',
-    'Regional 1° × 1° block FAI values use the national coverage calendar (coverage_basis = national_calendar_proxy) and measure each block’s trajectory relative to its own 3-year baseline; blocks are never ranked by FAI.',
+    'A hotspot is a satellite thermal detection, not a confirmed fire. The data cannot separate wildfire from crop-residue burning or other heat sources.',
+    'Static land sources (FIRMS hotspot type 2) and water detections are excluded. The flag is not perfect: Phase 4 reports how much activity sits next to flagged static cells (3×3 neighbourhood).',
+    'A day with no records is a coverage fact, not proof of no fire. MODIS has no records on 253 of 1,096 days, and NOAA-21 is not expected before its science start (59 days in January–February 2023).',
+    'The satellites cross at different local times, so daytime and night-time sampling differ between sensors; hour-of-day patterns should be read per sensor.',
+    'Only three years (2023–2025) are available, so the seasonal profile and the anomaly baseline are short. The seasonal activity index is relative to each region’s own peak month.',
+    'Regions are analytical rectangles built from cell centres, not administrative boundaries.',
   ],
 } as const;
 

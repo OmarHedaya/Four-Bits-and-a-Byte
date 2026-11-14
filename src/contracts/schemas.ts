@@ -13,6 +13,7 @@ export const IsoDateSchema = z
 export const MonthSchema = z.union([
   z.number().int().min(1).max(12),
   z.string().regex(/^\d{4}-\d{2}$/, 'Expected YYYY-MM format'),
+  z.literal('all'),
 ]);
 
 /**
@@ -26,6 +27,10 @@ export const DailySummaryRecordSchema = z.object({
   count_viirs: z.number().int().nonnegative(),
   count_merged: z.number().int().nonnegative(),
   total_frp: z.number().nonnegative(),
+  /** Optional: summed FRP of raw MODIS detections (MW). Used by the sensor-split FRP view. */
+  frp_modis: z.number().nonnegative().optional(),
+  /** Optional: summed FRP of raw VIIRS detections (MW). Used by the sensor-split FRP view. */
+  frp_viirs: z.number().nonnegative().optional(),
   high_conf_share: z.number().min(0).max(1),
   anomaly_z: z.number(),
   fai_daily: z.number().nullable().optional(),
@@ -65,10 +70,12 @@ export const GridCellPropertiesSchema = z.object({
   static_in_3x3: z.boolean().optional(),
   nearest_static_km: z.number().nonnegative().optional(),
   hotspot_cluster_id: z.string().nullable().optional(),
-  cell_type: z.enum(['veg_candidate', 'static_source', 'both']).optional(),
+  cell_type: z.enum(['veg_candidate', 'static_source', 'static_thermal', 'both']).optional(),
   first_date: z.string().optional(),
   last_date: z.string().optional(),
   static_detections_total: z.number().nonnegative().optional(),
+  active_days: z.number().nonnegative().optional(),
+  years_active: z.number().nonnegative().optional(),
 });
 
 export type GridCellRecord = z.infer<typeof GridCellPropertiesSchema>;

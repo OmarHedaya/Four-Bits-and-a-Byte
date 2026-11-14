@@ -14,6 +14,7 @@ export interface AnomalyRiskPanelProps {
   highlightedRange: { start: string; end: string; label?: string } | null;
   onSelectAnomaly: (anom: AnomalyRecord) => void;
   onSelectRiskPeriod: (risk: RiskPeriodRecord) => void;
+  expandToFill?: boolean;
 }
 
 export function AnomalyRiskPanel({
@@ -23,14 +24,32 @@ export function AnomalyRiskPanel({
   highlightedRange,
   onSelectAnomaly,
   onSelectRiskPeriod,
+  expandToFill = false,
 }: AnomalyRiskPanelProps) {
   const getRegionName = (regionId: string) =>
     regions.find((r) => r.region_id === regionId)?.name ?? regionId;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: expandToFill ? '14px' : '12px',
+        flex: expandToFill ? 1 : undefined,
+        height: expandToFill ? '100%' : undefined,
+        justifyContent: expandToFill ? 'space-between' : undefined,
+      }}
+    >
       {/* 1. Ranked Historical Anomalies (ANOMALIES) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: expandToFill ? '8px' : '6px',
+          flex: expandToFill ? '1.15 1 0%' : undefined,
+          minHeight: 0,
+        }}
+      >
         <div
           style={{
             display: 'flex',
@@ -56,7 +75,17 @@ export function AnomalyRiskPanel({
             description="No ≥3σ multi-day departures recorded for the active region and year filter."
           />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: expandToFill ? '8px' : '6px',
+              flex: expandToFill ? 1 : undefined,
+              maxHeight: expandToFill ? '540px' : '285px',
+              overflowY: 'auto',
+              paddingRight: '4px',
+            }}
+          >
             {anomalies.map((anom) => {
               const isSelected =
                 highlightedRange?.start === anom.start_date &&
@@ -76,10 +105,12 @@ export function AnomalyRiskPanel({
                       isSelected ? '#F26B2D' : 'var(--border-line)'
                     }`,
                     borderRadius: 'var(--radius-md)',
-                    padding: '10px 12px',
+                    padding: expandToFill ? '10px 12px' : '8px 10px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '5px',
+                    justifyContent: 'space-between',
+                    flex: expandToFill && anomalies.length <= 5 ? 1 : undefined,
+                    gap: '4px',
                     color: 'var(--text-primary)',
                     cursor: 'pointer',
                   }}
@@ -97,7 +128,7 @@ export function AnomalyRiskPanel({
                       className="tabular-nums"
                       style={{
                         fontWeight: 600,
-                        fontSize: 'var(--text-sm)',
+                        fontSize: 'var(--text-xs)',
                         color: 'var(--text-bright)',
                       }}
                     >
@@ -125,9 +156,9 @@ export function AnomalyRiskPanel({
                   <p
                     style={{
                       margin: 0,
-                      fontSize: 'var(--text-xs)',
+                      fontSize: '11.5px',
                       color: 'var(--text-muted)',
-                      lineHeight: 1.4,
+                      lineHeight: 1.35,
                     }}
                   >
                     {anom.reason}
@@ -144,8 +175,10 @@ export function AnomalyRiskPanel({
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '8px',
-          paddingTop: '12px',
+          gap: expandToFill ? '8px' : '6px',
+          flex: expandToFill ? '1 1 0%' : undefined,
+          minHeight: 0,
+          paddingTop: expandToFill ? '12px' : '10px',
           borderTop: '1px solid var(--border-line)',
         }}
       >
@@ -168,7 +201,17 @@ export function AnomalyRiskPanel({
           </span>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: expandToFill ? '8px' : '6px',
+            flex: expandToFill ? 1 : undefined,
+            maxHeight: expandToFill ? '480px' : '235px',
+            overflowY: 'auto',
+            paddingRight: '4px',
+          }}
+        >
           {riskPeriods.map((risk) => {
             const driversList = Array.isArray(risk.drivers)
               ? risk.drivers
@@ -184,10 +227,12 @@ export function AnomalyRiskPanel({
                   backgroundColor: 'rgba(11, 18, 32, 0.72)',
                   border: '1px solid var(--border-line)',
                   borderRadius: 'var(--radius-md)',
-                  padding: '10px 12px',
+                  padding: expandToFill ? '10px 12px' : '8px 10px',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '5px',
+                  justifyContent: 'space-between',
+                  flex: expandToFill && riskPeriods.length <= 5 ? 1 : undefined,
+                  gap: '4px',
                   color: 'var(--text-primary)',
                   cursor: 'pointer',
                 }}
@@ -203,7 +248,7 @@ export function AnomalyRiskPanel({
                   <span
                     style={{
                       fontWeight: 600,
-                      fontSize: 'var(--text-sm)',
+                      fontSize: 'var(--text-xs)',
                       color: 'var(--text-bright)',
                     }}
                   >
@@ -218,11 +263,11 @@ export function AnomalyRiskPanel({
 
                 <ul
                   style={{
-                    margin: '2px 0 0',
-                    paddingLeft: '16px',
-                    fontSize: '11.5px',
+                    margin: '1px 0 0',
+                    paddingLeft: '15px',
+                    fontSize: '11px',
                     color: 'var(--text-muted)',
-                    lineHeight: 1.4,
+                    lineHeight: 1.35,
                   }}
                 >
                   {driversList.map((d) => (

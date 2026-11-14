@@ -33,6 +33,8 @@ export function AudienceModeBanner({ mode }: AudienceModeBannerProps) {
 
   return (
     <div
+      key={mode}
+      className="audience-mode-animated"
       style={{
         display: 'flex',
         alignItems: 'center',

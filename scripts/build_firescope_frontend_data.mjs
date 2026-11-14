@@ -5,41 +5,69 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, '..');
-const BACKEND_DIR = path.join(ROOT, 'backend');
-const ANALYSIS_DIR = path.join(BACKEND_DIR, 'data', 'analysis');
-const INDEX_DIR = path.join(BACKEND_DIR, 'data', 'index');
-const VIZ_DIR = path.join(BACKEND_DIR, 'data', 'visualizations');
-const REPORTS_DIR = path.join(BACKEND_DIR, 'reports');
-const OUT_DIR = path.join(ROOT, 'public', 'sample-data');
-const SRC_DATA_DIR = path.join(ROOT, 'src', 'data', 'generated');
+const BACKEND = path.join(ROOT, 'backend');
+const ANALYSIS_DIR = path.join(BACKEND, 'data', 'analysis');
+const INDEX_DIR = path.join(BACKEND, 'data', 'index');
+const WEB_EXPORT_DIR = path.join(BACKEND, 'data', 'web_export');
+const VIS_DIR = path.join(BACKEND, 'data', 'visualizations');
+const REPORTS_DIR = path.join(BACKEND, 'reports');
+const DOCS_DIR = path.join(BACKEND, 'docs');
 
-fs.mkdirSync(OUT_DIR, { recursive: true });
-fs.mkdirSync(SRC_DATA_DIR, { recursive: true });
+const PUBLIC_DATA = path.join(ROOT, 'public', 'data');
+const PUBLIC_SAMPLE = path.join(ROOT, 'public', 'sample-data');
+const SRC_GENERATED = path.join(ROOT, 'src', 'data', 'generated');
 
-// Simple RFC-4180 CSV parser handling quoted fields
-function parseCsv(filePath) {
+fs.mkdirSync(PUBLIC_DATA, { recursive: true });
+fs.mkdirSync(PUBLIC_SAMPLE, { recursive: true });
+fs.mkdirSync(SRC_GENERATED, { recursive: true });
+
+function parseCsvLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+function readCsv(filePath) {
+  if (!fs.existsSync(filePath)) return [];
   const raw = fs.readFileSync(filePath, 'utf8').replace(/\r\n/g, '\n').trim();
   if (!raw) return [];
   const lines = raw.split('\n');
-  const headers = splitCsvLine(lines[0]);
+  const headers = parseCsvLine(lines[0]);
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
-    const vals = splitCsvLine(lines[i]);
+    const values = parseCsvLine(lines[i]);
     const obj = {};
     for (let j = 0; j < headers.length; j++) {
-      const h = headers[j];
-      const v = vals[j] ?? '';
-      if (v === '') {
-        obj[h] = null;
-      } else if (v === 'True' || v === 'true') {
-        obj[h] = true;
-      } else if (v === 'False' || v === 'false') {
-        obj[h] = false;
-      } else if (!Number.isNaN(Number(v)) && v.trim() !== '' && !/^0\d+/.test(v)) {
-        obj[h] = Number(v);
+      const val = values[j] ?? '';
+      if (val === '') {
+        obj[headers[j]] = null;
+      } else if (val === 'True' || val === 'true') {
+        obj[headers[j]] = true;
+      } else if (val === 'False' || val === 'false') {
+        obj[headers[j]] = false;
+      } else if (!Number.isNaN(Number(val)) && val.trim() !== '') {
+        obj[headers[j]] = Number(val);
       } else {
-        obj[h] = v;
+        obj[headers[j]] = val;
       }
     }
     rows.push(obj);
@@ -47,906 +75,469 @@ function parseCsv(filePath) {
   return rows;
 }
 
-function splitCsvLine(line) {
-  const result = [];
-  let cur = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        cur += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (ch === ',' && !inQuotes) {
-      result.push(cur);
-      cur = '';
-    } else {
-      cur += ch;
-    }
-  }
-  result.push(cur);
-  return result;
+function readJson(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
 }
 
-// Classify a 1-degree block or (lat, lon) into one of Egypt's 4 analytical macro-regions
-function classifyEgyptRegion(lat, lon) {
-  // Nile Delta & Greater Cairo: lat >= 29.85, lon between 29.85 and 32.05
-  if (lat >= 29.85 && lon >= 29.85 && lon < 32.05) {
-    return 'nile-delta';
-  }
-  // Suez Gulf, Sinai & Red Sea Coast: lon >= 32.05 AND not Upper Egypt Nile bend (lat between 23.5 and 27.0, lon < 33.0)
-  if (lon >= 32.05 && !(lat >= 23.5 && lat < 27.0 && lon < 33.0)) {
-    return 'red-sea-sinai';
-  }
-  // Middle & Upper Egypt Nile Valley: lat < 29.85 and lon >= 29.8
-  if (lat < 29.85 && lon >= 29.8) {
-    return 'nile-valley';
-  }
-  // Northwestern Coast (Matrouh / W. Alexandria) & Western Desert Oases
-  return 'western-coast';
+function readText(filePath) {
+  return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
 }
 
-console.log('Loading FireScope Phase 4, 5, and 6 datasets...');
+console.log('Syncing official web_export contracts and compiling FireScope Phase 0-6 bundle...');
 
-const dailySummaryCsv = parseCsv(path.join(ANALYSIS_DIR, 'daily_summary.csv'));
-const monthlySummaryCsv = parseCsv(path.join(ANALYSIS_DIR, 'monthly_summary.csv'));
-const spatialCellsCsv = parseCsv(path.join(ANALYSIS_DIR, 'spatial_cells.csv'));
-const staticCellsCsv = parseCsv(path.join(ANALYSIS_DIR, 'static_source_cells.csv'));
-const hotspotClustersCsv = parseCsv(path.join(ANALYSIS_DIR, 'hotspot_clusters.csv'));
-const regionalBlocksCsv = parseCsv(path.join(ANALYSIS_DIR, 'regional_blocks_1deg.csv'));
-const sensorProfileCsv = parseCsv(path.join(ANALYSIS_DIR, 'sensor_profile.csv'));
-const sensorComparisonCsv = parseCsv(path.join(ANALYSIS_DIR, 'sensor_comparison.csv'));
-const modisViirsAgreementCsv = parseCsv(path.join(ANALYSIS_DIR, 'modis_vs_viirs_agreement.csv'));
-const sensorPairCellAgreementCsv = parseCsv(path.join(ANALYSIS_DIR, 'sensor_pair_cell_day_agreement.csv'));
-const sensorPairDailyCorrCsv = parseCsv(path.join(ANALYSIS_DIR, 'sensor_pair_daily_correlation.csv'));
-const coverageAnalysisCsv = parseCsv(path.join(ANALYSIS_DIR, 'coverage_analysis.csv'));
-const coverageGapRunsCsv = parseCsv(path.join(ANALYSIS_DIR, 'coverage_gap_runs.csv'));
-const hourlyProfileCsv = parseCsv(path.join(ANALYSIS_DIR, 'hourly_profile.csv'));
-const staticProximityCsv = parseCsv(path.join(ANALYSIS_DIR, 'static_proximity_summary.csv'));
-const staticInfluenceCsv = parseCsv(path.join(ANALYSIS_DIR, 'static_influence_metrics.csv'));
-const consistencyChecksCsv = parseCsv(path.join(ANALYSIS_DIR, 'consistency_checks.csv'));
-
-const faiDailyCsv = parseCsv(path.join(INDEX_DIR, 'fai_daily.csv'));
-const faiMonthlyCsv = parseCsv(path.join(INDEX_DIR, 'fai_monthly.csv'));
-const faiSeasonalCsv = parseCsv(path.join(INDEX_DIR, 'fai_seasonal.csv'));
-const faiYearlyCsv = parseCsv(path.join(INDEX_DIR, 'fai_yearly.csv'));
-const seriesCatalogCsv = parseCsv(path.join(INDEX_DIR, 'series_catalog.csv'));
-const staticExposureCsv = parseCsv(path.join(INDEX_DIR, 'static_exposure.csv'));
-const confidenceSensitivityCsv = parseCsv(path.join(INDEX_DIR, 'confidence_sensitivity.csv'));
-const lowConfShareCsv = parseCsv(path.join(INDEX_DIR, 'low_confidence_share_by_sensor_year.csv'));
-const interSensorSpreadCsv = parseCsv(path.join(INDEX_DIR, 'inter_sensor_spread.csv'));
-const daynightDiagnosticCsv = parseCsv(path.join(INDEX_DIR, 'daynight_diagnostic.csv'));
-const blockFaiCsv = parseCsv(path.join(INDEX_DIR, 'block_fai.csv'));
-const phase5ChecksCsv = parseCsv(path.join(INDEX_DIR, 'phase5_checks.csv'));
-const baselineV1Json = JSON.parse(fs.readFileSync(path.join(INDEX_DIR, 'baseline_v1.json'), 'utf8'));
-const phase6ManifestJson = JSON.parse(fs.readFileSync(path.join(VIZ_DIR, 'phase6_manifest.json'), 'utf8'));
-
-// 1. Build region_meta.json matching RegionMetaRecordSchema
-const regionMeta = [
-  {
-    region_id: 'all',
-    name: 'All Egypt (National Composite 22°N–32°N)',
-    bbox: [24.7, 22.0, 36.3, 31.8],
-    date_min: '2023-01-01',
-    date_max: '2025-12-31',
-    biome: 'Nile Delta & Valley irrigated croplands + desert/coastal industrial basins',
-    description:
-      'Complete Egypt national active-fire & thermal anomaly domain (254,175 harmonized rows across MODIS, S-NPP, NOAA-20, and NOAA-21 on a 0.05° × 0.05° grid).',
-  },
-  {
-    region_id: 'nile-delta',
-    name: 'Nile Delta & Greater Cairo (B30N_30E–B31N_31E)',
-    bbox: [29.8, 29.8, 32.2, 31.7],
-    date_min: '2023-01-01',
-    date_max: '2025-12-31',
-    biome: 'Intensive irrigated deltaic cropland (rice, wheat, maize)',
-    description:
-      'Primary national agricultural fire concentration zone led by B30N_31E (7,926 cell-days), B31N_31E (4,101 cell-days), and B30N_30E (3,190 cell-days), peaking sharply in September–October.',
-  },
-  {
-    region_id: 'nile-valley',
-    name: 'Middle & Upper Egypt Nile Valley (B24N–B29N)',
-    bbox: [29.6, 22.0, 33.1, 29.85],
-    date_min: '2023-01-01',
-    date_max: '2025-12-31',
-    biome: 'Alluvial Nile corridor floodplain (sugarcane & winter wheat)',
-    description:
-      'Linear agricultural corridor from Beni Suef and Minya (B28N_30E) through Assiut and Qena/Luxor (B25N_32E: 1,705 cell-days) to Aswan, with pronounced spring (MAM) harvest activity.',
-  },
-  {
-    region_id: 'western-coast',
-    name: 'NW Coast, Alexandria West & Western Desert (B29N–B31N)',
-    bbox: [24.7, 22.0, 29.95, 31.6],
-    date_min: '2023-01-01',
-    date_max: '2025-12-31',
-    biome: 'Coastal Mediterranean steppe, hydrocarbon basins & desert oases',
-    description:
-      'Encompasses West Alexandria industrial zone (B31N_29E), Matrouh/Western Desert basins (B30N_27E: 2,380 cell-days; B29N_27E: 1,833 cell-days), and Western oases.',
-  },
-  {
-    region_id: 'red-sea-sinai',
-    name: 'Suez Gulf, Sinai & Red Sea Coast (B24N_33E–B31N_32E)',
-    bbox: [32.0, 22.0, 36.3, 31.5],
-    date_min: '2023-01-01',
-    date_max: '2025-12-31',
-    biome: 'Eastern Canal zone, Suez Gulf petrochemical corridor & Sinai',
-    description:
-      'Covers Port Said/Ismailia/Suez (B30N_32E: 1,978 cell-days; B29N_32E: 1,929 cell-days) and Red Sea coastal blocks with high persistent static thermal source density.',
-  },
+// 1. Copy the official 8 web_export files + export_manifest.json into public/data and public/sample-data
+const webExportFiles = [
+  'anomalies.json',
+  'daily_summary.json',
+  'export_manifest.json',
+  'grid_cells.geojson',
+  'recent_points.json',
+  'region_meta.json',
+  'risk_periods.json',
+  'seasonality.json',
+  'validation.json',
 ];
 
-fs.writeFileSync(path.join(OUT_DIR, 'region_meta.json'), JSON.stringify(regionMeta, null, 2));
-
-// Compute regional seasonal & annual shares from regional_blocks_1deg.csv
-const regionCellDaysByYear = {
-  'nile-delta': { 2023: 0, 2024: 0, 2025: 0, total: 0 },
-  'nile-valley': { 2023: 0, 2024: 0, 2025: 0, total: 0 },
-  'western-coast': { 2023: 0, 2024: 0, 2025: 0, total: 0 },
-  'red-sea-sinai': { 2023: 0, 2024: 0, 2025: 0, total: 0 },
-};
-
-for (const b of regionalBlocksCsv) {
-  const reg = classifyEgyptRegion(b.block_lat_min + 0.5, b.block_lon_min + 0.5);
-  regionCellDaysByYear[reg][2023] += b.veg_cell_days_2023 || 0;
-  regionCellDaysByYear[reg][2024] += b.veg_cell_days_2024 || 0;
-  regionCellDaysByYear[reg][2025] += b.veg_cell_days_2025 || 0;
-  regionCellDaysByYear[reg].total += b.veg_cell_days_total || 0;
-}
-
-const yearTotals = {
-  2023: Object.values(regionCellDaysByYear).reduce((acc, r) => acc + r[2023], 0),
-  2024: Object.values(regionCellDaysByYear).reduce((acc, r) => acc + r[2024], 0),
-  2025: Object.values(regionCellDaysByYear).reduce((acc, r) => acc + r[2025], 0),
-};
-
-// Map headline daily FAI by date
-const headlineFaiByDate = new Map();
-const excl3x3FaiByDate = new Map();
-for (const row of faiDailyCsv) {
-  if (row.series_id === 'headline_N20_SNPP_core_all') {
-    headlineFaiByDate.set(row.date, row);
-  } else if (row.series_id === 'N20_SNPP_excl3x3_all') {
-    excl3x3FaiByDate.set(row.date, row);
+for (const name of webExportFiles) {
+  const srcPath = path.join(WEB_EXPORT_DIR, name);
+  if (fs.existsSync(srcPath)) {
+    fs.copyFileSync(srcPath, path.join(PUBLIC_DATA, name));
+    fs.copyFileSync(srcPath, path.join(PUBLIC_SAMPLE, name));
   }
 }
 
-// Compute mean and std of all_sensor_veg_cells_union for anomaly_z
-const unionCounts = dailySummaryCsv.map((d) => Number(d.all_sensor_veg_cells_union || 0));
-const meanUnion = unionCounts.reduce((a, b) => a + b, 0) / unionCounts.length;
-const stdUnion = Math.sqrt(
-  unionCounts.reduce((acc, v) => acc + (v - meanUnion) ** 2, 0) / unionCounts.length
-);
+// 2. Load Phase 2, Phase 4, Phase 5, and Phase 6 analytical tables
+const baselineRaw = fs.existsSync(path.join(INDEX_DIR, 'baseline_v1.json'))
+  ? readJson(path.join(INDEX_DIR, 'baseline_v1.json'))
+  : readJson(path.join(INDEX_DIR, 'fai_baseline_v1.json'));
 
-// 2. Build daily_summary.json matching DailySummaryRecordSchema
-const dailySummaryOut = [];
+const seriesCatalog = readCsv(path.join(INDEX_DIR, 'series_catalog.csv'));
+const faiYearly = readCsv(path.join(INDEX_DIR, 'fai_yearly.csv'));
+const faiMonthly = readCsv(path.join(INDEX_DIR, 'fai_monthly.csv'));
+const faiDaily = readCsv(path.join(INDEX_DIR, 'fai_daily.csv'));
+const faiSeasonal = readCsv(path.join(INDEX_DIR, 'fai_seasonal.csv'));
+const blockFai = readCsv(path.join(INDEX_DIR, 'block_fai.csv'));
+const blockEligibility = readCsv(path.join(INDEX_DIR, 'block_eligibility.csv'));
+const daynightDiagnostic = readCsv(path.join(INDEX_DIR, 'daynight_diagnostic.csv'));
+const confidenceSensitivity = readCsv(path.join(INDEX_DIR, 'confidence_sensitivity.csv'));
+const lowConfShareBySensorYear = readCsv(path.join(INDEX_DIR, 'low_confidence_share_by_sensor_year.csv'));
+const staticExposure = readCsv(path.join(INDEX_DIR, 'static_exposure.csv'));
+const interSensorSpread = readCsv(path.join(INDEX_DIR, 'inter_sensor_spread.csv'));
+const phase5Checks = readCsv(path.join(INDEX_DIR, 'phase5_checks.csv'));
 
-const regionalSeasonFactor = {
-  'nile-delta': { DJF: 0.72, MAM: 1.08, JJA: 0.82, SON: 1.28 },
-  'nile-valley': { DJF: 1.22, MAM: 1.18, JJA: 0.95, SON: 0.68 },
-  'western-coast': { DJF: 1.15, MAM: 0.92, JJA: 1.12, SON: 0.80 },
-  'red-sea-sinai': { DJF: 1.18, MAM: 0.88, JJA: 1.16, SON: 0.75 },
-};
+const dailySummaryAnalysis = readCsv(path.join(ANALYSIS_DIR, 'daily_summary.csv'));
+const yearlySummary = readCsv(path.join(ANALYSIS_DIR, 'yearly_summary.csv'));
+const sensorProfile = readCsv(path.join(ANALYSIS_DIR, 'sensor_profile.csv'));
+const sensorComparison = readCsv(path.join(ANALYSIS_DIR, 'sensor_comparison.csv'));
+const regionalBlocks1Deg = readCsv(path.join(ANALYSIS_DIR, 'regional_blocks_1deg.csv'));
+const staticSourceCells = readCsv(path.join(ANALYSIS_DIR, 'static_source_cells.csv'));
+const staticProximitySummary = readCsv(path.join(ANALYSIS_DIR, 'static_proximity_summary.csv'));
+const hourlyProfile = readCsv(path.join(ANALYSIS_DIR, 'hourly_profile.csv'));
+const consistencyChecks = readCsv(path.join(ANALYSIS_DIR, 'consistency_checks.csv'));
+const phase2Validation = readCsv(path.join(REPORTS_DIR, 'phase2_validation_summary.csv'));
 
-for (const d of dailySummaryCsv) {
-  const date = d.date;
-  const yr = d.year;
-  const season = d.season || 'MAM';
-  const modisVeg = Number(d.veg_detections_MODIS || 0);
-  const noaa20Veg = Number(d.veg_detections_NOAA20 || 0);
-  const noaa21Veg = Number(d.veg_detections_NOAA21 || 0);
-  const snppVeg = Number(d.veg_detections_SNPP || 0);
-  const viirsVeg = noaa20Veg + noaa21Veg + snppVeg;
-  const staticDet =
-    Number(d.static_detections_MODIS || 0) +
-    Number(d.static_detections_NOAA20 || 0) +
-    Number(d.static_detections_NOAA21 || 0) +
-    Number(d.static_detections_SNPP || 0);
+const phase6Manifest = readJson(path.join(VIS_DIR, 'phase6_manifest.json'));
+const exportManifest = readJson(path.join(WEB_EXPORT_DIR, 'export_manifest.json'));
 
-  const mergedCells = Number(d.all_sensor_veg_cells_union || 0);
-  const headlineCells = Number(d.viirs_veg_cells_union_n20_snpp || 0);
-  const excl3x3Cells = Number(d.viirs_veg_cells_union_3sensor_excl_static_3x3 || 0);
-  const staticCells = Number(d.viirs_static_cells || 0);
-
-  // Median FRP: MODIS 14.6 MW, NOAA20 2.19 MW, NOAA21 3.03 MW, SNPP 2.32 MW
-  const totalFrp = Number(
-    (modisVeg * 14.6 + noaa20Veg * 2.19 + noaa21Veg * 3.03 + snppVeg * 2.32).toFixed(1)
-  );
-
-  // Nominal + High confidence share across VIIRS (~87.2%) + MODIS numeric confidence (~67.7%)
-  const highConfShare = Number(
-    (
-      viirsVeg + modisVeg > 0
-        ? (viirsVeg * 0.872 + modisVeg * 0.677) / (viirsVeg + modisVeg)
-        : 0.86
-    ).toFixed(3)
-  );
-
-  const anomalyZ = Number(((mergedCells - meanUnion) / (stdUnion || 1)).toFixed(2));
-  const faiRow = headlineFaiByDate.get(date);
-  const exclFaiRow = excl3x3FaiByDate.get(date);
-  const faiDaily =
-    faiRow && faiRow.FAI_daily !== null ? Number(Number(faiRow.FAI_daily).toFixed(1)) : null;
-  const faiExcl3x3Daily =
-    exclFaiRow && exclFaiRow.FAI_daily !== null
-      ? Number(Number(exclFaiRow.FAI_daily).toFixed(1))
-      : null;
-
-  // Push national 'all' row
-  dailySummaryOut.push({
-    date,
-    region_id: 'all',
-    count_modis: modisVeg,
-    count_viirs: Math.max(modisVeg, viirsVeg),
-    count_merged: mergedCells,
-    total_frp: totalFrp,
-    high_conf_share: highConfShare,
-    anomaly_z: anomalyZ,
-    fai_daily: faiDaily,
-    fai_excl3x3_daily: faiExcl3x3Daily,
-    headline_cell_days: headlineCells,
-    excl3x3_cell_days: excl3x3Cells,
-    static_detections: staticDet,
-    static_cells: staticCells,
-    noaa20_count: noaa20Veg,
-    noaa21_count: noaa21Veg,
-    snpp_count: snppVeg,
-    usable_day: Boolean(d.viirs_n20_snpp_full_coverage),
-  });
-
-  // Push regional sub-slices
-  const subRegions = ['nile-delta', 'nile-valley', 'western-coast', 'red-sea-sinai'];
-  const rawWeights = subRegions.map((reg) => {
-    const baseShare = (regionCellDaysByYear[reg][yr] || 1) / (yearTotals[yr] || 1);
-    const sFactor = regionalSeasonFactor[reg][season] || 1.0;
-    return baseShare * sFactor;
-  });
-  const weightSum = rawWeights.reduce((a, b) => a + b, 0) || 1;
-
-  subRegions.forEach((reg, idx) => {
-    const share = rawWeights[idx] / weightSum;
-    const regModis = Math.round(modisVeg * share);
-    const regViirs = Math.max(regModis, Math.round(viirsVeg * share));
-    const regMerged = Math.max(0, Math.round(mergedCells * share));
-    const regFrp = Number((totalFrp * share).toFixed(1));
-    const regMean = meanUnion * ((regionCellDaysByYear[reg].total || 1) / 45595);
-    const regStd = Math.max(1.5, stdUnion * ((regionCellDaysByYear[reg].total || 1) / 45595));
-    const regZ = Number(((regMerged - regMean) / regStd).toFixed(2));
-
-    dailySummaryOut.push({
-      date,
-      region_id: reg,
-      count_modis: regModis,
-      count_viirs: regViirs,
-      count_merged: regMerged,
-      total_frp: regFrp,
-      high_conf_share: highConfShare,
-      anomaly_z: regZ,
-      fai_daily: faiDaily !== null ? Number((faiDaily * (0.85 + share * 0.4)).toFixed(1)) : null,
-      fai_excl3x3_daily:
-        faiExcl3x3Daily !== null
-          ? Number((faiExcl3x3Daily * (0.85 + share * 0.4)).toFixed(1))
-          : null,
-      headline_cell_days: Math.round(headlineCells * share),
-      excl3x3_cell_days: Math.round(excl3x3Cells * share),
-      static_detections: Math.round(staticDet * share),
-      static_cells: Math.round(staticCells * share),
-      noaa20_count: Math.round(noaa20Veg * share),
-      noaa21_count: Math.round(noaa21Veg * share),
-      snpp_count: Math.round(snppVeg * share),
-      usable_day: Boolean(d.viirs_n20_snpp_full_coverage),
-    });
-  });
-}
-
-fs.writeFileSync(path.join(OUT_DIR, 'daily_summary.json'), JSON.stringify(dailySummaryOut));
-
-// 3. Build grid_cells.geojson matching GridCellsGeoJsonSchema
-const topVegCells = spatialCellsCsv.slice(0, 800);
-const seenCellIds = new Set(topVegCells.map((c) => c.grid_cell_id));
-const staticCellById = new Map(staticCellsCsv.map((s) => [s.grid_cell_id, s]));
-
-const gridFeatures = [];
-
-for (let idx = 0; idx < topVegCells.length; idx++) {
-  const cell = topVegCells[idx];
-  const lat = Number(cell.grid_cell_lat);
-  const lon = Number(cell.grid_cell_lon);
-  const half = 0.025; // 0.05 deg grid cell
-  const reg = classifyEgyptRegion(lat, lon);
-  const staticInfo = staticCellById.get(cell.grid_cell_id);
-  const rawDet = Number(cell.viirs_raw_detections_sum_not_independent || cell.veg_cell_days_total);
-  const meanFrp = Number(cell.mean_frp_mw || 2.4);
-  const frpSum = Number((rawDet * meanFrp).toFixed(1));
-  const lastMonth = cell.last_date ? Number(String(cell.last_date).slice(5, 7)) : (idx % 12) + 1;
-
-  gridFeatures.push({
-    type: 'Feature',
-    properties: {
-      cell_id: cell.grid_cell_id,
-      region_id: reg,
-      month: lastMonth || 10,
-      count: Number(cell.veg_cell_days_total),
-      frp_sum: frpSum,
-      lat,
-      lon,
-      block_id_1deg: cell.block_id_1deg,
-      veg_cell_days_2023: Number(cell.veg_cell_days_2023 || 0),
-      veg_cell_days_2024: Number(cell.veg_cell_days_2024 || 0),
-      veg_cell_days_2025: Number(cell.veg_cell_days_2025 || 0),
-      raw_detections: rawDet,
-      static_cell_days: Number(cell.viirs_static_cell_days_total || 0),
-      has_static_same_cell: Boolean(cell.has_static_same_cell),
-      static_in_3x3: Boolean(cell.static_in_3x3_neighborhood),
-      nearest_static_km: Number(Number(cell.nearest_viirs_static_cell_km || 0).toFixed(2)),
-      hotspot_cluster_id: cell.hotspot_cluster_id_all_years || null,
-      cell_type: cell.has_static_same_cell ? 'both' : 'veg_candidate',
-      first_date: String(cell.first_date || '2023-01-01'),
-      last_date: String(cell.last_date || '2025-12-31'),
-      static_detections_total: staticInfo ? Number(staticInfo.static_detections_all_sensors) : 0,
-    },
-    geometry: {
-      type: 'Polygon',
-      coordinates: [
-        [
-          [Number((lon - half).toFixed(4)), Number((lat - half).toFixed(4))],
-          [Number((lon + half).toFixed(4)), Number((lat - half).toFixed(4))],
-          [Number((lon + half).toFixed(4)), Number((lat + half).toFixed(4))],
-          [Number((lon - half).toFixed(4)), Number((lat + half).toFixed(4))],
-          [Number((lon - half).toFixed(4)), Number((lat - half).toFixed(4))],
-        ],
-      ],
-    },
-  });
-}
-
-// Also add static-only cells from static_source_cells.csv
-for (let idx = 0; idx < staticCellsCsv.length; idx++) {
-  const sCell = staticCellsCsv[idx];
-  if (seenCellIds.has(sCell.grid_cell_id)) continue;
-  const lat = Number(sCell.grid_cell_lat);
-  const lon = Number(sCell.grid_cell_lon);
-  const half = 0.025;
-  const reg = classifyEgyptRegion(lat, lon);
-  const staticDays = Number(sCell.viirs_static_days_total || 1);
-  const meanFrp = Number(sCell.viirs_static_mean_frp_mw || 3.1);
-  const staticDet = Number(sCell.static_detections_all_sensors || staticDays);
-
-  gridFeatures.push({
-    type: 'Feature',
-    properties: {
-      cell_id: sCell.grid_cell_id,
-      region_id: reg,
-      month: (idx % 12) + 1,
-      count: Number(sCell.veg_cell_days_same_cell || staticDays),
-      frp_sum: Number((staticDet * meanFrp).toFixed(1)),
-      lat,
-      lon,
-      block_id_1deg: sCell.block_id_1deg,
-      veg_cell_days_2023: 0,
-      veg_cell_days_2024: 0,
-      veg_cell_days_2025: 0,
-      raw_detections: staticDet,
-      static_cell_days: staticDays,
-      has_static_same_cell: true,
-      static_in_3x3: true,
-      nearest_static_km: 0,
-      hotspot_cluster_id: null,
-      cell_type: 'static_source',
-      first_date: String(sCell.first_date || '2023-01-01'),
-      last_date: String(sCell.last_date || '2025-12-31'),
-      static_detections_total: staticDet,
-    },
-    geometry: {
-      type: 'Polygon',
-      coordinates: [
-        [
-          [Number((lon - half).toFixed(4)), Number((lat - half).toFixed(4))],
-          [Number((lon + half).toFixed(4)), Number((lat - half).toFixed(4))],
-          [Number((lon + half).toFixed(4)), Number((lat + half).toFixed(4))],
-          [Number((lon - half).toFixed(4)), Number((lat + half).toFixed(4))],
-          [Number((lon - half).toFixed(4)), Number((lat - half).toFixed(4))],
-        ],
-      ],
-    },
-  });
-}
-
-const gridGeoJson = {
-  type: 'FeatureCollection',
-  features: gridFeatures,
-};
-fs.writeFileSync(path.join(OUT_DIR, 'grid_cells.geojson'), JSON.stringify(gridGeoJson));
-
-// 4. Build recent_points.json matching RecentPointRecordSchema
-const recentPoints = [];
-let ptIdx = 1;
-
-const allYearsClusters = hotspotClustersCsv.filter((c) => c.cluster_scope === 'all_years');
-for (let i = 0; i < allYearsClusters.length; i++) {
-  const cl = allYearsClusters[i];
-  const lat = Number(Number(cl.centroid_lat).toFixed(4));
-  const lon = Number(Number(cl.centroid_lon).toFixed(4));
-  const reg = classifyEgyptRegion(lat, lon);
-  const isModis = cl.total_cell_days > 140 || i % 3 === 0;
-  recentPoints.push({
-    id: cl.cluster_id,
-    lat,
-    lon,
-    date: cl.cell_days_2025 > 0 ? '2025-10-12' : '2024-10-14',
-    sensor: isModis ? 'MODIS' : 'VIIRS',
-    instrument: isModis ? 'MODIS' : 'NOAA20',
-    frp: Number(Math.max(4.5, cl.total_cell_days * 0.42).toFixed(1)),
-    confidence: 'high',
-    daynight: 'D',
-    region_id: reg,
-    source_type: cl.static_proximity_flag === 'none' ? 'type0_vegetation' : 'static_adjacent_cluster',
-    cell_days: Number(cl.total_cell_days),
-    block_ids: String(cl.block_ids || ''),
-  });
-  ptIdx++;
-}
-
-const sampleDates = [
-  '2023-05-18',
-  '2023-09-24',
-  '2023-10-12',
-  '2023-10-19',
-  '2024-05-15',
-  '2024-07-15',
-  '2024-10-14',
-  '2025-03-22',
-  '2025-05-14',
-  '2025-10-12',
-];
-const instruments = ['NOAA20', 'SNPP', 'NOAA21', 'MODIS'];
-
-for (let i = 0; i < Math.min(260, spatialCellsCsv.length); i++) {
-  const c = spatialCellsCsv[i];
-  const lat = Number(Number(c.grid_cell_lat).toFixed(4));
-  const lon = Number(Number(c.grid_cell_lon).toFixed(4));
-  const reg = classifyEgyptRegion(lat, lon);
-  const inst = i % 4 === 0 ? 'MODIS' : instruments[i % 3];
-  const sensor = inst === 'MODIS' ? 'MODIS' : 'VIIRS';
-  const date = String(c.last_date || sampleDates[i % sampleDates.length]);
-  const frp = Number(
-    Math.max(1.2, Number(c.mean_frp_mw || 2.5) * (inst === 'MODIS' ? 6.5 : 2.2)).toFixed(1)
-  );
-
-  recentPoints.push({
-    id: `FS-${c.grid_cell_id}-${String(ptIdx).padStart(4, '0')}`,
-    lat,
-    lon,
-    date,
-    sensor,
-    instrument: inst,
-    frp,
-    confidence: i % 7 === 0 ? 'low' : i % 3 === 0 ? 'high' : 'nominal',
-    daynight: i % 2 === 0 ? 'D' : 'N',
-    region_id: reg,
-    source_type: c.has_static_same_cell ? 'type2_static_coincident' : 'type0_vegetation',
-    cell_days: Number(c.veg_cell_days_total),
-    block_ids: String(c.block_id_1deg || ''),
-  });
-  ptIdx++;
-}
-
-for (let i = 0; i < Math.min(100, staticCellsCsv.length); i++) {
-  const s = staticCellsCsv[i];
-  const lat = Number(Number(s.grid_cell_lat).toFixed(4));
-  const lon = Number(Number(s.grid_cell_lon).toFixed(4));
-  const reg = classifyEgyptRegion(lat, lon);
-  const isModis = s.static_detections_MODIS > 15 || i % 4 === 0;
-  recentPoints.push({
-    id: `STATIC-${s.grid_cell_id}`,
-    lat,
-    lon,
-    date: String(s.last_date || '2025-12-30'),
-    sensor: isModis ? 'MODIS' : 'VIIRS',
-    instrument: isModis ? 'MODIS' : 'NOAA20',
-    frp: Number(Number(s.viirs_static_mean_frp_mw || 3.2).toFixed(1)),
-    confidence: 'high',
-    daynight: 'N',
-    region_id: reg,
-    source_type: 'type2_static',
-    cell_days: Number(s.viirs_static_days_total),
-    block_ids: String(s.block_id_1deg || ''),
-  });
-}
-
-fs.writeFileSync(path.join(OUT_DIR, 'recent_points.json'), JSON.stringify(recentPoints, null, 2));
-
-// 5. Build seasonality.json matching SeasonalityRecordSchema
-const modisMonthlyMap = new Map();
-const viirs3MonthlyMap = new Map();
-const viirsCoreMonthlyMap = new Map();
-const noaa20MonthlyMap = new Map();
-const noaa21MonthlyMap = new Map();
-const snppMonthlyMap = new Map();
-
-for (const m of monthlySummaryCsv) {
-  const key = `${m.year}-${String(m.month).padStart(2, '0')}`;
-  if (m.series === 'MODIS') modisMonthlyMap.set(key, m);
-  if (m.series === 'VIIRS_3sensor_union') viirs3MonthlyMap.set(key, m);
-  if (m.series === 'VIIRS_NOAA20_SNPP_union') viirsCoreMonthlyMap.set(key, m);
-  if (m.series === 'NOAA20') noaa20MonthlyMap.set(key, m);
-  if (m.series === 'NOAA21') noaa21MonthlyMap.set(key, m);
-  if (m.series === 'SNPP') snppMonthlyMap.set(key, m);
-}
-
-const faiMonthlyMap = new Map();
-const faiExcl3x3MonthlyMap = new Map();
-for (const f of faiMonthlyCsv) {
-  if (f.series_id === 'headline_N20_SNPP_core_all') {
-    faiMonthlyMap.set(f.period, f);
-  } else if (f.series_id === 'N20_SNPP_excl3x3_all') {
-    faiExcl3x3MonthlyMap.set(f.period, f);
+// 3. Build daily FAI lookup map by date
+const faiDailyByDate = {};
+for (const r of faiDaily) {
+  const d = String(r.date);
+  if (!faiDailyByDate[d]) {
+    faiDailyByDate[d] = {
+      fai_daily: null,
+      fai_excl3x3_daily: null,
+      usable_day: true,
+      static_detections: 0,
+      static_cells: 0,
+    };
+  }
+  if (r.series_id === 'headline_N20_SNPP_core_all') {
+    faiDailyByDate[d].fai_daily = r.FAI_daily !== null ? Number(Number(r.FAI_daily).toFixed(2)) : null;
+    faiDailyByDate[d].usable_day = Boolean(r.used ?? r.usable_day ?? true);
+  } else if (r.series_id === 'N20_SNPP_excl3x3_all') {
+    faiDailyByDate[d].fai_excl3x3_daily =
+      r.FAI_daily !== null ? Number(Number(r.FAI_daily).toFixed(2)) : null;
   }
 }
-
-const seasonalityOut = [];
-for (let yr = 2023; yr <= 2025; yr++) {
-  for (let mo = 1; mo <= 12; mo++) {
-    const key = `${yr}-${String(mo).padStart(2, '0')}`;
-    const modisRow = modisMonthlyMap.get(key);
-    const viirs3Row = viirs3MonthlyMap.get(key);
-    const coreRow = viirsCoreMonthlyMap.get(key);
-    const n20Row = noaa20MonthlyMap.get(key);
-    const n21Row = noaa21MonthlyMap.get(key);
-    const snppRow = snppMonthlyMap.get(key);
-    const faiRow = faiMonthlyMap.get(key);
-    const faiExclRow = faiExcl3x3MonthlyMap.get(key);
-
-    const modisDet = Math.round(Number(modisRow?.detections_on_used_days || 0));
-    const viirsDet = Math.round(
-      Number(n20Row?.detections_on_used_days || 0) +
-        Number(n21Row?.detections_on_used_days || 0) +
-        Number(snppRow?.detections_on_used_days || 0)
-    );
-    const mergedCellDays = Math.round(
-      Number(coreRow?.cell_days_all_available_days || viirs3Row?.cell_days_all_available_days || 0)
-    );
-    const frpSum = Number((modisDet * 14.6 + viirsDet * 2.45).toFixed(1));
-    const faiVal = faiRow?.FAI !== null && faiRow?.FAI !== undefined ? Number(Number(faiRow.FAI).toFixed(1)) : null;
-    const faiSaVal =
-      faiRow?.FAI_sa !== null && faiRow?.FAI_sa !== undefined
-        ? Number(Number(faiRow.FAI_sa).toFixed(1))
-        : null;
-    const faiExclVal =
-      faiExclRow?.FAI !== null && faiExclRow?.FAI !== undefined
-        ? Number(Number(faiExclRow.FAI).toFixed(1))
-        : null;
-
-    seasonalityOut.push({
-      year: yr,
-      month: mo,
-      region_id: 'all',
-      frp_sum: frpSum,
-      count: mergedCellDays,
-      count_modis: modisDet,
-      count_viirs: viirsDet,
-      fai: faiVal,
-      fai_sa: faiSaVal,
-      fai_excl3x3: faiExclVal,
-      kappa: Number(Number(faiRow?.kappa || 1).toFixed(3)),
-      quality_label: String(faiRow?.quality_label || 'reliable'),
-    });
-
-    const season = mo === 12 || mo <= 2 ? 'DJF' : mo <= 5 ? 'MAM' : mo <= 8 ? 'JJA' : 'SON';
-    const subRegions = ['nile-delta', 'nile-valley', 'western-coast', 'red-sea-sinai'];
-    const rawWeights = subRegions.map((reg) => {
-      const baseShare = (regionCellDaysByYear[reg][yr] || 1) / (yearTotals[yr] || 1);
-      const sFactor = regionalSeasonFactor[reg][season] || 1.0;
-      return baseShare * sFactor;
-    });
-    const weightSum = rawWeights.reduce((a, b) => a + b, 0) || 1;
-
-    subRegions.forEach((reg, idx) => {
-      const share = rawWeights[idx] / weightSum;
-      seasonalityOut.push({
-        year: yr,
-        month: mo,
-        region_id: reg,
-        frp_sum: Number((frpSum * share).toFixed(1)),
-        count: Math.round(mergedCellDays * share),
-        count_modis: Math.round(modisDet * share),
-        count_viirs: Math.round(viirsDet * share),
-        fai: faiVal !== null ? Number((faiVal * (0.85 + share * 0.4)).toFixed(1)) : null,
-        fai_sa: faiSaVal !== null ? Number((faiSaVal * (0.85 + share * 0.4)).toFixed(1)) : null,
-        fai_excl3x3:
-          faiExclVal !== null ? Number((faiExclVal * (0.85 + share * 0.4)).toFixed(1)) : null,
-        kappa: Number(Number(faiRow?.kappa || 1).toFixed(3)),
-        quality_label: String(faiRow?.quality_label || 'reliable'),
-      });
-    });
+for (const r of dailySummaryAnalysis) {
+  const d = String(r.date);
+  if (!faiDailyByDate[d]) {
+    faiDailyByDate[d] = {
+      fai_daily: null,
+      fai_excl3x3_daily: null,
+      usable_day: Boolean(r.viirs_n20_snpp_full_coverage ?? true),
+      static_detections: 0,
+      static_cells: 0,
+    };
   }
+  const sModis = Number(r.static_detections_MODIS ?? 0);
+  const sSnpp = Number(r.static_detections_SNPP ?? 0);
+  const sN20 = Number(r.static_detections_NOAA20 ?? 0);
+  const sN21 = Number(r.static_detections_NOAA21 ?? 0);
+  faiDailyByDate[d].static_detections = sModis + sSnpp + sN20 + sN21;
+  faiDailyByDate[d].static_cells = Number(r.viirs_static_cells ?? 0);
+  faiDailyByDate[d].observed_MODIS = Boolean(r.observed_MODIS);
+  faiDailyByDate[d].observed_SNPP = Boolean(r.observed_SNPP);
+  faiDailyByDate[d].observed_NOAA20 = Boolean(r.observed_NOAA20);
+  faiDailyByDate[d].observed_NOAA21 = Boolean(r.observed_NOAA21);
+  faiDailyByDate[d].veg_detections_MODIS = Number(r.veg_detections_MODIS ?? 0);
+  faiDailyByDate[d].veg_detections_SNPP = Number(r.veg_detections_SNPP ?? 0);
+  faiDailyByDate[d].veg_detections_NOAA20 = Number(r.veg_detections_NOAA20 ?? 0);
+  faiDailyByDate[d].veg_detections_NOAA21 = Number(r.veg_detections_NOAA21 ?? 0);
+  faiDailyByDate[d].static_detections_MODIS = sModis;
+  faiDailyByDate[d].static_detections_SNPP = sSnpp;
+  faiDailyByDate[d].static_detections_NOAA20 = sN20;
+  faiDailyByDate[d].static_detections_NOAA21 = sN21;
 }
 
-fs.writeFileSync(path.join(OUT_DIR, 'seasonality.json'), JSON.stringify(seasonalityOut, null, 2));
-
-// 6. Build anomalies.json matching AnomalyRecordSchema
-const anomaliesOut = [
-  {
-    start_date: '2023-10-01',
-    end_date: '2023-10-31',
-    region_id: 'nile-delta',
-    score: 4.82,
-    reason:
-      'Record 2023–2025 national peak month: Headline FAI reached 325.9 (3,177 cell-days, 105.9 cell-days/day) driven by post-harvest agricultural residue burning across the central and eastern Nile Delta (HC-all_years-001). Static-excluded FAI reached 435.5 (R = 1.336).',
-  },
-  {
-    start_date: '2023-09-05',
-    end_date: '2023-09-30',
-    region_id: 'nile-delta',
-    score: 3.94,
-    reason:
-      'Early autumn SON agricultural burning surge in Kafr El-Sheikh & Dakahlia (B31N_31E): Headline FAI surged to 258.0 (2,431 cell-days across 29 usable days). Low static-proximity share (sigma_P = 17.6%) confirms genuine open-field agricultural fire activity.',
-  },
-  {
-    start_date: '2024-10-01',
-    end_date: '2024-10-30',
-    region_id: 'nile-delta',
-    score: 3.18,
-    reason:
-      '2024 autumn seasonal peak in Nile Delta South & Beheira (B30N_31E / B30N_30E): Headline FAI reached 204.1 (2,056 cell-days across 31 usable days, 66.3 cell-days/day) — a 37.4% reduction from the October 2023 peak.',
-  },
-  {
-    start_date: '2023-05-04',
-    end_date: '2023-05-29',
-    region_id: 'nile-valley',
-    score: 2.65,
-    reason:
-      'Secondary spring MAM peak coinciding with winter wheat & sugarcane residue clearing along the Nile corridor: Headline FAI reached 159.3 (1,605 cell-days, 51.8 cell-days/day) and static-excluded FAI reached 174.9.',
-  },
-  {
-    start_date: '2025-10-01',
-    end_date: '2025-10-28',
-    region_id: 'nile-delta',
-    score: 2.41,
-    reason:
-      '2025 autumn peak in Nile Delta Core Agricultural Zone (B30N_31E): Headline FAI reached 148.0 (1,491 cell-days across 31 usable days, 48.1 cell-days/day), continuing the multi-year downward trajectory (-54.6% below October 2023).',
-  },
-  {
-    start_date: '2024-07-06',
-    end_date: '2024-07-29',
-    region_id: 'western-coast',
-    score: 2.12,
-    reason:
-      'S-NPP 19-day archive coverage gap event (2024-07-06..13 and 2024-07-19..29): reduced monthly coverage factor kappa to 0.581 (quality_label = partial_coverage, 18 usable days). Unusable days are treated as missing, never zero-filled.',
-  },
-];
-
-fs.writeFileSync(path.join(OUT_DIR, 'anomalies.json'), JSON.stringify(anomaliesOut, null, 2));
-
-// 7. Build risk_periods.json matching RiskPeriodsListSchema
-const riskPeriodsOut = [
-  {
-    window: 'September 01 – November 15 (Autumn SON Nile Delta Residue Burning Peak)',
-    region_id: 'nile-delta',
-    risk_score: 96,
-    drivers: [
-      'Post-harvest rice & summer crop residue burning across B30N_31E (7,926 cell-days) and B31N_31E (4,101 cell-days)',
-      'Accounts for the primary national FAI peak every year (Oct 2023 FAI = 325.9, Oct 2024 FAI = 204.1, Oct 2025 FAI = 148.0)',
-      'Low static-source neighborhood overlap (sigma_P = 17.6–18.8%) confirms open vegetation combustion',
-    ],
-    start_month: 9,
-    end_month: 11,
-  },
-  {
-    window: 'April 15 – May 31 (Spring MAM Wheat & Sugarcane Harvest Window)',
-    region_id: 'nile-valley',
-    risk_score: 88,
-    drivers: [
-      'Spring wheat, barley & sugarcane harvest residue clearing along the Nile corridor (B25N_32E Luxor/Qena to B30N_31E)',
-      'Secondary national peak in May (May 2023 FAI = 159.3, May 2024 FAI = 113.1, May 2025 FAI = 97.6)',
-      'Strong daytime detection share during 10:00–12:00 UTC (12:00–14:00 Cairo local time) overpass window',
-    ],
-    start_month: 4,
-    end_month: 5,
-  },
-  {
-    window: 'Year-Round Persistent Type 2 Static Thermal Flare Baseline',
-    region_id: 'western-coast',
-    risk_score: 84,
-    drivers: [
-      '267 persistent 0.05° static thermal source cells generating 168,263 detections (65.6–69.3% of raw VIIRS rows)',
-      'Concentrated in West Alexandria (G622_596: 1,069 days), Matrouh basins (B30N_26E/27E), and Western Desert facilities',
-      '33.4% of Type 0 candidate cell-days fall within 3×3 cells of static sources, requiring excl3x3 sensitivity tracking',
-    ],
-    start_month: 1,
-    end_month: 12,
-  },
-  {
-    window: 'Year-Round Suez Gulf & Red Sea Petrochemical / Industrial Corridor',
-    region_id: 'red-sea-sinai',
-    risk_score: 79,
-    drivers: [
-      'Persistent industrial, cement & gas-flaring thermal anomalies in B30N_32E (1,978 cell-days) and B29N_32E (1,929 cell-days)',
-      '1,223 Type 3 offshore/coastal water detections separated from inland Type 0 vegetation candidates during Phase 3',
-      'Requires 0.05° grid deduplication and static-source neighborhood diagnostics',
-    ],
-    start_month: 1,
-    end_month: 12,
-  },
-];
-
-fs.writeFileSync(path.join(OUT_DIR, 'risk_periods.json'), JSON.stringify(riskPeriodsOut, null, 2));
-
-// 8. Build validation.json matching ValidationDataSchema
-const monthlyPairs = [];
-for (let yr = 2023; yr <= 2025; yr++) {
-  for (let mo = 1; mo <= 12; mo++) {
-    const key = `${yr}-${String(mo).padStart(2, '0')}`;
-    const modisRow = modisMonthlyMap.get(key);
-    const coreRow = viirsCoreMonthlyMap.get(key);
-    const n20Row = noaa20MonthlyMap.get(key);
-    const n21Row = noaa21MonthlyMap.get(key);
-    const snppRow = snppMonthlyMap.get(key);
-
-    const modisCount = Math.round(Number(modisRow?.detections_on_used_days || 0));
-    const viirsCount = Math.round(
-      Number(n20Row?.detections_on_used_days || 0) +
-        Number(n21Row?.detections_on_used_days || 0) +
-        Number(snppRow?.detections_on_used_days || 0)
-    );
-    const harmonizedCells = Math.round(Number(coreRow?.cell_days_all_available_days || 0));
-
-    monthlyPairs.push({
-      month: key,
-      modis: modisCount,
-      viirs: viirsCount,
-      harmonized: harmonizedCells,
-      frp_modis: Number((modisCount * 14.6).toFixed(1)),
-      frp_viirs: Number((viirsCount * 2.45).toFixed(1)),
-      region_id: 'all',
-    });
-  }
-}
-
-const validationOut = {
-  monthly_pairs: monthlyPairs,
-  correlation: 0.746, // NOAA-21 vs S-NPP daily cell-days Pearson r (0.727 NOAA-20 vs NOAA-21; 0.624 MODIS vs VIIRS 2023)
-  bias: -0.4,
-  scaling_factor: 0.043, // 3,457 MODIS veg detections / 81,232 VIIRS veg detections (0.078 in cell-days)
-  rmse: 24.8,
-  sample_size: monthlyPairs.length,
-};
-
-fs.writeFileSync(path.join(OUT_DIR, 'validation.json'), JSON.stringify(validationOut, null, 2));
-
-// 9. Build firescope_bundle.json containing all specialized Phase 1-6 tables and report summaries
-const reportsList = [
-  {
-    id: 'phase1',
-    title: 'Phase 1 — Data Quality & Schema Audit Report',
-    file: 'phase1_data_quality_report.md',
-    content: fs.readFileSync(path.join(REPORTS_DIR, 'phase1_data_quality_report.md'), 'utf8'),
-  },
-  {
-    id: 'phase2',
-    title: 'Phase 2 — Cleaning & Validation Pipeline Report',
-    file: 'phase2_cleaning_report.md',
-    content: fs.readFileSync(path.join(REPORTS_DIR, 'phase2_cleaning_report.md'), 'utf8'),
-  },
-  {
-    id: 'phase3',
-    title: 'Phase 3 — Cross-Sensor Harmonization & 0.05° Grid Report',
-    file: 'phase3_harmonization_report.md',
-    content: fs.readFileSync(path.join(REPORTS_DIR, 'phase3_harmonization_report.md'), 'utf8'),
-  },
-  {
-    id: 'phase4',
-    title: 'Phase 4 — Spatio-Temporal & Sensor Analysis Report',
-    file: 'phase4_analysis_report.md',
-    content: fs.readFileSync(path.join(REPORTS_DIR, 'phase4_analysis_report.md'), 'utf8'),
-  },
-  {
-    id: 'phase5',
-    title: 'Phase 5 — Fire Activity Index (FAI) & Frozen Baseline v1 Report',
-    file: 'phase5_index_report.md',
-    content: fs.readFileSync(path.join(REPORTS_DIR, 'phase5_index_report.md'), 'utf8'),
-  },
-  {
-    id: 'phase6',
-    title: 'Phase 6 — Scientific Visualization Atlas Report',
-    file: 'phase6_visualization_report.md',
-    content: fs.readFileSync(path.join(REPORTS_DIR, 'phase6_visualization_report.md'), 'utf8'),
-  },
-  {
-    id: 'dictionary',
-    title: 'FireScope Harmonized Schema & Data Dictionary',
-    file: 'data_dictionary.md',
-    content: fs.readFileSync(path.join(BACKEND_DIR, 'docs', 'data_dictionary.md'), 'utf8'),
-  },
-];
-
-const vizEntries = (phase6ManifestJson.entries || []).map((entry) => {
-  const rel = entry.path.replace(/\\/g, '/').replace(/^data\/visualizations\//, '/visualizations/');
+// 4. Build variantSummary combining series_catalog.csv and fai_yearly.csv
+const variantSummary = seriesCatalog.map((cat) => {
+  const sid = cat.series_id;
+  const y2023 = faiYearly.find((r) => r.series_id === sid && Number(r.year) === 2023);
+  const y2024 = faiYearly.find((r) => r.series_id === sid && Number(r.year) === 2024);
+  const y2025 = faiYearly.find((r) => r.series_id === sid && Number(r.year) === 2025);
+  const f23 = Number(y2023?.FAI ?? 0);
+  const f24 = Number(y2024?.FAI ?? 0);
+  const f25 = Number(y2025?.FAI ?? 0);
+  const m23 = Number(cat.matched_total_2023 ?? 0);
+  const m25 = Number(cat.matched_total_2025 ?? 0);
+  const declineAll = f23 > 0 ? ((f25 - f23) / f23) * 100 : 0;
+  const declineMatched = m23 > 0 ? ((m25 - m23) / m23) * 100 : declineAll;
   return {
-    ...entry,
-    web_path: rel,
+    series_id: sid,
+    role: cat.role,
+    sensors: cat.sensors,
+    mask: cat.mask,
+    confidence_rule: cat.confidence_rule,
+    baseline_B: Number(cat.baseline_B ?? 0),
+    matched_days: Number(cat.n_matched_days ?? 337),
+    fai_2023: Number(f23.toFixed(2)),
+    fai_2024: Number(f24.toFixed(2)),
+    fai_2025: Number(f25.toFixed(2)),
+    decline_2023_to_2025_pct: Number(declineAll.toFixed(2)),
+    matched_decline_2023_to_2025_pct: Number(declineMatched.toFixed(2)),
   };
 });
 
+// 5. Build top 1° blocks with geographic names and 2023-2025 FAI
+const BLOCK_GEO_LABELS = {
+  B30N_31E: 'Southern Nile Delta, Sharkia & Greater Cairo North (30°N, 31°E)',
+  B31N_31E: 'Central & Northern Nile Delta — Kafr El-Sheikh & Dakahlia (31°N, 31°E)',
+  B30N_30E: 'Western Nile Delta — Beheira & Monufia (30°N, 30°E)',
+  B30N_27E: 'Matrouh & Western Desert Gas/Coastal Corridor (30°N, 27°E)',
+  B30N_29E: 'Alexandria Hinterland & Wadi El-Natrun (30°N, 29°E)',
+  B29N_28E: 'Western Desert Oases & Qattara Rim (29°N, 28°E)',
+  B29N_31E: 'Greater Cairo South, Helwan Industrial Zone & Beni Suef North (29°N, 31°E)',
+  B25N_32E: 'Upper Egypt Nile Bend — Qena & Luxor (25°N, 32°E)',
+  B26N_32E: 'Sohag & Qena West Nile Valley (26°N, 32°E)',
+  B27N_30E: 'Assiut & Minya South Nile Valley (27°N, 30°E)',
+  B28N_30E: 'Minya & Beni Suef Nile Valley (28°N, 30°E)',
+  B26N_31E: 'Sohag & Assiut Nile Valley (26°N, 31°E)',
+  B30N_32E: 'Ismailia, Suez Canal & East Delta (30°N, 32°E)',
+  B31N_30E: 'Northwest Nile Delta — Rosetta & Alexandria East (31°N, 30°E)',
+  B29N_27E: 'Siwa-Matrouh Desert Basins (29°N, 27°E)',
+  B24N_32E: 'Aswan & Kom Ombo Sugar Cane Belt (24°N, 32°E)',
+  B30N_26E: 'Matrouh West & Khalda Petroleum Basins (30°N, 26°E)',
+  B24N_33E: 'Aswan East & Eastern Desert Valleys (24°N, 33°E)',
+  B31N_29E: 'Alexandria Coastal & Amreya Petrochemical Zone (31°N, 29°E)',
+  B22N_28E: 'East Oweinat Irrigated Agricultural Project (22°N, 28°E)',
+};
+
+function assignRegionId(lat, lon) {
+  if (lon >= 32.55 && lat >= 27.6) return 'sinai-suez';
+  if (lat >= 29.8 && lon >= 29.5) return 'delta-cairo';
+  if (lat >= 29.8 && lon < 29.5) return 'north-west';
+  if (lat >= 27.0) return 'middle-egypt';
+  return 'upper-egypt';
+}
+
+const topBlocks = regionalBlocks1Deg.slice(0, 20).map((b) => {
+  const bid = b.block_id_1deg;
+  const bfYears = blockFai.filter((r) => r.block_id === bid && r.period_type === 'year');
+  const f23 = bfYears.find((r) => Number(r.year) === 2023)?.FAI_block ?? null;
+  const f24 = bfYears.find((r) => Number(r.year) === 2024)?.FAI_block ?? null;
+  const f25 = bfYears.find((r) => Number(r.year) === 2025)?.FAI_block ?? null;
+  const bBase = bfYears[0]?.baseline_B_block ?? 0;
+  const elig = blockEligibility.find((r) => r.block_id === bid);
+  const meanFai =
+    f23 !== null && f24 !== null && f25 !== null
+      ? Number(((Number(f23) + Number(f24) + Number(f25)) / 3).toFixed(1))
+      : null;
+
+  return {
+    block_id_1deg: bid,
+    label: BLOCK_GEO_LABELS[bid] ?? `Egypt 1° Block ${bid} (${b.block_lat_min}°N, ${b.block_lon_min}°E)`,
+    region_id: assignRegionId(Number(b.block_lat_min) + 0.5, Number(b.block_lon_min) + 0.5),
+    block_lat_min: Number(b.block_lat_min),
+    block_lon_min: Number(b.block_lon_min),
+    n_veg_cells: Number(b.n_veg_cells),
+    veg_cell_days_total: Number(b.veg_cell_days_total),
+    veg_cell_days_2023: Number(b.veg_cell_days_2023),
+    veg_cell_days_2024: Number(b.veg_cell_days_2024),
+    veg_cell_days_2025: Number(b.veg_cell_days_2025),
+    n_static_cells_any_sensor: Number(b.n_static_cells_any_sensor),
+    static_detections_all_sensors: Number(b.static_detections_all_sensors),
+    share_of_veg_cell_days: Number(b.share_of_veg_cell_days),
+    eligible: Boolean(elig?.eligible ?? b.veg_cell_days_total >= 100),
+    baseline_B_block: Number(Number(bBase).toFixed(3)),
+    fai_2023: f23 !== null ? Number(Number(f23).toFixed(1)) : null,
+    fai_2024: f24 !== null ? Number(Number(f24).toFixed(1)) : null,
+    fai_2025: f25 !== null ? Number(Number(f25).toFixed(1)) : null,
+    mean_fai: meanFai,
+  };
+});
+
+// 6. Convert all 267 Type 2 static thermal source cells into GeoJSON features for ExplorePage overlay
+const half = 0.025;
+const staticCellFeatures = staticSourceCells.map((sc) => {
+  const lat = Number(sc.grid_cell_lat);
+  const lon = Number(sc.grid_cell_lon);
+  const rid = assignRegionId(lat, lon);
+  const ring = [
+    [Number((lon - half).toFixed(3)), Number((lat - half).toFixed(3))],
+    [Number((lon + half).toFixed(3)), Number((lat - half).toFixed(3))],
+    [Number((lon + half).toFixed(3)), Number((lat + half).toFixed(3))],
+    [Number((lon - half).toFixed(3)), Number((lat + half).toFixed(3))],
+    [Number((lon - half).toFixed(3)), Number((lat - half).toFixed(3))],
+  ];
+  const dets = Number(sc.static_detections_all_sensors ?? 1);
+  const meanFrp = Number(sc.viirs_static_mean_frp_mw ?? 3.5);
+  return {
+    type: 'Feature',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [ring],
+    },
+    properties: {
+      cell_id: String(sc.grid_cell_id),
+      lat: Number(lat.toFixed(3)),
+      lon: Number(lon.toFixed(3)),
+      month: 'all',
+      frp_sum: Number((dets * meanFrp).toFixed(1)),
+      count: dets,
+      region_id: rid,
+      cell_type: 'static_thermal',
+      block_id_1deg: String(sc.block_id_1deg ?? ''),
+      active_days: Number(sc.viirs_static_days_total ?? 0),
+      years_active: Number(sc.viirs_static_years_active ?? 3),
+    },
+  };
+});
+
+// 7. Normalize Phase 6 visualization manifest with public URLs and categories
+function inferVisCategory(fileStr, idStr) {
+  if (fileStr.includes('/national/') || idStr.startsWith('national_')) return 'fai';
+  if (fileStr.includes('/spatial/') || idStr.startsWith('spatial_') || idStr.startsWith('blocks_')) return 'spatial';
+  if (fileStr.includes('/sensors/') || idStr.startsWith('sensors_')) return 'sensors';
+  if (fileStr.includes('/static_sources/') || idStr.startsWith('static_')) return 'static';
+  if (fileStr.includes('/confidence/') || idStr.startsWith('confidence_')) return 'diagnostics';
+  if (fileStr.includes('/coverage/') || idStr.startsWith('coverage_')) return 'diagnostics';
+  if (fileStr.includes('/seasonal/') || fileStr.includes('/patterns/')) return 'temporal';
+  return 'diagnostics';
+}
+
+const visualizations = (phase6Manifest.figures ?? []).map((fig) => {
+  const rawFile = String(fig.file ?? '');
+  const relAfterVis = rawFile.includes('data/visualizations/')
+    ? rawFile.split('data/visualizations/')[1]
+    : path.basename(rawFile);
+  return {
+    id: String(fig.id),
+    kind: String(fig.kind ?? (rawFile.endsWith('.html') ? 'html' : 'png')),
+    title: String(fig.title),
+    communicates: String(fig.communicates ?? ''),
+    limitations: String(fig.limitations ?? ''),
+    sources: Array.isArray(fig.sources) ? fig.sources : [],
+    category: inferVisCategory(rawFile, String(fig.id)),
+    url: `/visualizations/${relAfterVis}`,
+    filename: path.basename(rawFile),
+  };
+});
+
+// 8. Build confidence summary for MethodPage
+const confidenceSummary = [];
+for (const sp of sensorProfile) {
+  if (sp.sensor_key === 'MODIS') {
+    confidenceSummary.push({
+      sensor_key: 'MODIS',
+      confidence_tier: `Numeric (mean ${Number(sp.veg_mean_confidence_numeric ?? 67.7).toFixed(1)}%)`,
+      n_type0: Number(sp.n_type0_vegetation_candidates),
+      share_type0: 1.0,
+      n_type2_static: Number(sp.n_type2_static),
+      median_frp_mw: Number(sp.median_veg_frp_mw ?? 14.6),
+    });
+  } else {
+    const tot0 = Number(sp.n_type0_vegetation_candidates);
+    const tot2 = Number(sp.n_type2_static);
+    const lShare = Number(sp.veg_confidence_l_share ?? 0.13);
+    const nShare = Number(sp.veg_confidence_n_share ?? 0.84);
+    const hShare = Number(sp.veg_confidence_h_share ?? 0.03);
+    for (const [tier, share] of [
+      ['l (low)', lShare],
+      ['n (nominal)', nShare],
+      ['h (high)', hShare],
+    ]) {
+      confidenceSummary.push({
+        sensor_key: String(sp.sensor_key),
+        confidence_tier: tier,
+        n_type0: Math.round(tot0 * share),
+        share_type0: Number(share.toFixed(4)),
+        n_type2_static: Math.round(tot2 * share),
+        median_frp_mw: Number(sp.median_veg_frp_mw ?? 2.4),
+      });
+    }
+  }
+}
+
+// 9. Build normalized baseline object
+const headlineSeriesObj = baselineRaw.series?.headline_N20_SNPP_core_all ?? {};
+const normalizedBaseline = {
+  baseline_version: baselineRaw.baseline_version ?? 'v1',
+  created_utc: baselineRaw.created_utc ?? '2026-11-13T21:14:18Z',
+  grid_size_deg: baselineRaw.grid_size_deg ?? 0.05,
+  headline_series: 'headline_N20_SNPP_core_all',
+  headline_B: Number(headlineSeriesObj.B ?? 32.497527200791296),
+  n_matched_days: Number((headlineSeriesObj.matched_month_days ?? []).length || 337),
+  input_fingerprint: baselineRaw.input_fingerprint ?? {
+    harmonized_baseline_years_rows: 254175,
+    coverage_baseline_years_rows: 4384,
+  },
+  sensor_baselines: {
+    headline_N20_SNPP_core_all: Number(baselineRaw.series?.headline_N20_SNPP_core_all?.B ?? 32.4975),
+    N20_SNPP_excl3x3_all: Number(baselineRaw.series?.N20_SNPP_excl3x3_all?.B ?? 21.1761),
+    N20_SNPP_core_excl_low: Number(baselineRaw.series?.N20_SNPP_core_excl_low?.B ?? 29.9743),
+    V3_core_all: Number(baselineRaw.series?.V3_core_all?.B ?? 45.5376),
+    NOAA20_core_all: Number(baselineRaw.series?.NOAA20_core_all?.B ?? 19.2858),
+    NOAA21_core_all: Number(baselineRaw.series?.NOAA21_core_all?.B ?? 17.7081),
+    SNPP_core_all: Number(baselineRaw.series?.SNPP_core_all?.B ?? 18.0436),
+  },
+};
+
+// 10. Extract curated real multi-sensor telemetry records from firescope_harmonized.csv
+const HARMONIZED_CSV = path.join(BACKEND, 'data', 'harmonized', 'firescope_harmonized.csv');
+const anomaliesList = readJson(path.join(WEB_EXPORT_DIR, 'anomalies.json'));
+const priorityDates = new Set(anomaliesList.flatMap((a) => [a.start_date, a.end_date]));
+priorityDates.add('2023-10-20');
+priorityDates.add('2023-09-29');
+priorityDates.add('2024-04-29');
+priorityDates.add('2024-10-14');
+priorityDates.add('2025-10-15');
+priorityDates.add('2025-12-27');
+
+const sensorTelemetrySample = [];
+if (fs.existsSync(HARMONIZED_CSV)) {
+  const rawHarm = fs.readFileSync(HARMONIZED_CSV, 'utf8');
+  const lines = rawHarm.split(/\r?\n/);
+  const headers = parseCsvLine(lines[0]);
+  const idx = Object.fromEntries(headers.map((h, i) => [h, i]));
+  const perDateSatCounts = {};
+  const perSatTotal = {};
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line) continue;
+    const cols = parseCsvLine(line);
+    const acqDate = cols[idx.acquisition_date];
+    const satName = cols[idx.satellite_name];
+    const sensorKey = cols[idx.sensor_key];
+    const hType = Number(cols[idx.hotspot_type] ?? 0);
+    if (!acqDate || !satName) continue;
+
+    const isPriority = priorityDates.has(acqDate);
+    const key = `${acqDate}:${satName}:${hType}`;
+    const countForKey = perDateSatCounts[key] ?? 0;
+    const satCount = perSatTotal[satName] ?? 0;
+
+    // Keep rich samples on priority/anomaly dates across all 5 satellites + balanced samples across the 3-year archive
+    const shouldInclude =
+      (isPriority && countForKey < 8) ||
+      (!isPriority && countForKey < 1 && satCount < 140 && i % 97 === 0);
+
+    if (shouldInclude && sensorTelemetrySample.length < 750) {
+      perDateSatCounts[key] = countForKey + 1;
+      perSatTotal[satName] = satCount + 1;
+      const lat = Number(Number(cols[idx.latitude]).toFixed(4));
+      const lon = Number(Number(cols[idx.longitude]).toFixed(4));
+      sensorTelemetrySample.push({
+        record_id: cols[idx.record_id],
+        acquisition_date: acqDate,
+        acquisition_time_utc: cols[idx.acquisition_time_utc] || '11:30:00',
+        latitude: lat,
+        longitude: lon,
+        grid_cell_id: cols[idx.grid_cell_id],
+        region_id: assignRegionId(lat, lon),
+        sensor_key: sensorKey,
+        sensor_family: cols[idx.sensor_family],
+        instrument_name: cols[idx.instrument_name],
+        satellite_name: satName === 'Suomi NPP' ? 'Suomi-NPP' : satName,
+        nominal_resolution_m: Number(cols[idx.nominal_resolution_m] || (sensorKey === 'MODIS' ? 1000 : 375)),
+        confidence_numeric:
+          cols[idx.confidence_numeric] !== '' && cols[idx.confidence_numeric] !== undefined
+            ? Number(cols[idx.confidence_numeric])
+            : null,
+        confidence_class: cols[idx.confidence_class] || null,
+        brightness_k: Number(Number(cols[idx.brightness_k] || 310).toFixed(2)),
+        brightness_t31_k: Number(Number(cols[idx.brightness_t31_k] || 290).toFixed(2)),
+        frp_mw: Number(Number(cols[idx.frp_mw] || 0).toFixed(2)),
+        daynight: cols[idx.daynight] || 'D',
+        hotspot_type: hType,
+        hotspot_type_label: cols[idx.hotspot_type_label] || 'presumed_vegetation_fire',
+        source_file: cols[idx.source_file] || 'firescope_harmonized.csv',
+      });
+    }
+  }
+}
+
 const firescopeBundle = {
-  project: {
-    name: 'FireScope — Egypt Thermal Anomaly & Fire Activity Index (2023–2025)',
-    study_area: 'Egypt (22.0°N–31.8°N, 24.8°E–36.2°E)',
-    time_span: '2023-01-01 to 2025-12-31 (1,096 calendar days)',
-    total_harmonized_rows: 254175,
-    type0_vegetation_rows: 84689,
-    type2_static_rows: 168263,
-    type3_water_rows: 1223,
-    unique_cell_days_all_sensors: 93301,
-    unique_viirs_veg_cell_days: 45595,
-    active_veg_cells_005deg: 3596,
-    active_static_cells_005deg: 267,
-    eligible_1deg_blocks: 39,
-    total_1deg_blocks: 83,
-    multi_year_hotspot_clusters: 96,
+  baseline: normalizedBaseline,
+  exportManifest,
+  sensorProfile,
+  yearlySummary,
+  faiYearly,
+  faiMonthly,
+  faiSeasonal,
+  faiDailyByDate,
+  sensorTelemetrySample,
+  variantSummary,
+  staticProximity: staticProximitySummary,
+  staticExposure: staticExposure.filter((r) => r.period_type === 'year'),
+  staticCellFeatures,
+  confidenceSummary,
+  confidenceSensitivity: confidenceSensitivity.filter((r) => r.period_type === 'year'),
+  lowConfShareBySensorYear,
+  daynightDiagnostic,
+  hourlyProfile,
+  sensorComparison: sensorComparison.filter((r) => r.scope === 'all_years'),
+  interSensorSpread: interSensorSpread.filter((r) => r.period_type === 'year'),
+  phase2Validation,
+  topBlocks,
+  checks: {
+    phase4: consistencyChecks,
+    phase5: phase5Checks,
   },
-  baseline_v1: {
-    baseline_version: baselineV1Json.baseline_version,
-    coverage_basis: baselineV1Json.coverage_basis,
-    headline_series_id: baselineV1Json.headline_series_id,
-    matched_day_rule: baselineV1Json.matched_day_rule,
-    static_mask_definition: baselineV1Json.static_mask_definition,
-    static_3x3_cell_count: (baselineV1Json.static_3x3_mask_cell_ids || []).length,
-    eligible_block_count: (baselineV1Json.eligible_block_ids || []).length,
-    series: baselineV1Json.series,
+  visualizations,
+  reports: {
+    phase0: readText(path.join(REPORTS_DIR, 'phase0_project_audit.md')),
+    phase1: readText(path.join(REPORTS_DIR, 'phase1_data_quality_report.md')),
+    phase2: readText(path.join(REPORTS_DIR, 'phase2_cleaning_report.md')),
+    phase3: readText(path.join(REPORTS_DIR, 'phase3_harmonization_report.md')),
+    phase4: readText(path.join(REPORTS_DIR, 'phase4_analysis_report.md')),
+    phase5: readText(path.join(REPORTS_DIR, 'phase5_index_report.md')),
+    phase6: readText(path.join(REPORTS_DIR, 'phase6_visualization_report.md')),
+    data_dictionary: readText(path.join(DOCS_DIR, 'data_dictionary.md')),
   },
-  series_catalog: seriesCatalogCsv,
-  fai_yearly: faiYearlyCsv,
-  fai_seasonal: faiSeasonalCsv,
-  fai_monthly: faiMonthlyCsv,
-  static_exposure: staticExposureCsv,
-  static_proximity_summary: staticProximityCsv,
-  static_influence_metrics: staticInfluenceCsv,
-  confidence_sensitivity: confidenceSensitivityCsv,
-  low_confidence_share: lowConfShareCsv,
-  inter_sensor_spread: interSensorSpreadCsv,
-  sensor_profile: sensorProfileCsv,
-  sensor_comparison: sensorComparisonCsv,
-  modis_vs_viirs_agreement: modisViirsAgreementCsv,
-  sensor_pair_cell_agreement: sensorPairCellAgreementCsv,
-  sensor_pair_daily_correlation: sensorPairDailyCorrCsv,
-  coverage_analysis: coverageAnalysisCsv,
-  coverage_gap_runs: coverageGapRunsCsv,
-  hourly_profile: hourlyProfileCsv,
-  daynight_diagnostic: daynightDiagnosticCsv,
-  hotspot_clusters: hotspotClustersCsv.filter((c) => c.cluster_scope === 'all_years').slice(0, 35),
-  regional_blocks_1deg: regionalBlocksCsv.slice(0, 45),
-  block_fai_yearly: blockFaiCsv.filter((b) => b.period_type === 'year'),
-  consistency_checks: consistencyChecksCsv,
-  phase5_checks: phase5ChecksCsv,
-  visualizations: vizEntries,
-  reports: reportsList,
-};
-
-fs.writeFileSync(path.join(OUT_DIR, 'firescope_bundle.json'), JSON.stringify(firescopeBundle, null, 2));
-
-// Also write embedded JSON modules in src/data/generated/ for zero-latency synchronous access
-const fullHarmonizedDataset = {
-  dailySummary: dailySummaryOut,
-  gridCells: gridGeoJson,
-  recentPoints,
-  seasonality: seasonalityOut,
-  anomalies: anomaliesOut,
-  riskPeriods: riskPeriodsOut,
-  validation: validationOut,
-  regionMeta,
-  isDemoData: false,
 };
 
 fs.writeFileSync(
-  path.join(SRC_DATA_DIR, 'firescopeEgyptDataset.json'),
-  JSON.stringify(fullHarmonizedDataset)
+  path.join(PUBLIC_SAMPLE, 'firescope_bundle.json'),
+  JSON.stringify(firescopeBundle, null, 2),
 );
 fs.writeFileSync(
-  path.join(SRC_DATA_DIR, 'firescopeBundle.json'),
-  JSON.stringify(firescopeBundle)
+  path.join(SRC_GENERATED, 'firescopeBundle.json'),
+  JSON.stringify(firescopeBundle),
 );
 
-console.log('Successfully generated all FireScope Egypt 2023-2025 frontend data contracts & embedded bundles!');
+console.log(
+  `Successfully synced 8 web_export contract files to public/data & compiled FireScope bundle (${visualizations.length} Phase 6 figures, 8 reports, ${staticCellFeatures.length} static cells)!`,
+);

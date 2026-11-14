@@ -46,6 +46,7 @@ interface InspectedFeatureInfo {
   subtitle: string;
   frp: number;
   count?: number;
+  cellType?: string;
   sensor?: 'MODIS' | 'VIIRS';
   confidence?: string | number;
   date?: string;
@@ -96,6 +97,19 @@ export function FireMap({
     [recentPoints],
   );
 
+  // Colour ramp scaled to the displayed cells (98th percentile), so the thermal ramp
+  // stays readable whatever the dataset's magnitude (a fixed ramp hides low-count regions).
+  const gridValueKey = metric === 'frp' ? 'frp_sum' : 'count';
+  const rampMax = useMemo(() => {
+    const values = gridCells.features
+      .map((f) => Number(f.properties[gridValueKey]))
+      .filter((v) => Number.isFinite(v) && v > 0)
+      .sort((a, b) => a - b);
+    if (values.length === 0) return 1;
+    const p98 = values[Math.min(values.length - 1, Math.floor(values.length * 0.98))];
+    return Math.max(1, p98);
+  }, [gridCells, gridValueKey]);
+
   // Inline mission-control graticule + fallback dark style if remote vector tiles fail
   const fallbackMapStyle = useMemo(
     () => ({
@@ -115,8 +129,9 @@ export function FireMap({
     [],
   );
 
-  // Fit bounds when regionMeta changes
-  useEffect(() => {
+  // Frame the active region. Used on load (the map instance does not exist yet when the first
+  // effect runs) and whenever the region changes.
+  const fitToRegion = (duration: number) => {
     if (!mapRef.current || !regionMeta) return;
     const [minLon, minLat, maxLon, maxLat] = regionMeta.bbox;
     try {
@@ -125,11 +140,17 @@ export function FireMap({
           [minLon, minLat],
           [maxLon, maxLat],
         ],
-        { padding: 36, duration: 650 },
+        { padding: 36, duration },
       );
     } catch {
       // Ignore fitBounds errors during headless test teardown
     }
+  };
+
+  // Fit bounds when regionMeta changes
+  useEffect(() => {
+    fitToRegion(650);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [regionMeta]);
 
   const handleMapClick = (e: MapLayerMouseEvent) => {
@@ -153,19 +174,22 @@ export function FireMap({
         date: String(props.date ?? ''),
       });
     } else if (feature.layer.id === 'grid-cells-fill') {
+      const cellType = String(props.cell_type ?? 'vegetation');
       setInspected({
         longitude: Number(props.lon ?? e.lngLat.lng),
         latitude: Number(props.lat ?? e.lngLat.lat),
         kind: 'cell',
-        title: `Grid cell ${props.cell_id}`,
-        subtitle: `Month ${props.month} · Centroid ${Number(props.lat).toFixed(2)}°, ${Number(props.lon).toFixed(2)}°`,
+        title:
+          cellType === 'static_thermal'
+            ? `Static thermal cell ${props.cell_id}`
+            : `Grid cell ${props.cell_id}`,
+        subtitle: `${props.month === 'all' ? 'All months' : `Month ${props.month}`} · Centroid ${Number(props.lat).toFixed(2)}°, ${Number(props.lon).toFixed(2)}°`,
         frp: Number(props.frp_sum ?? 0),
         count: Number(props.count ?? 0),
+        cellType,
       });
     }
   };
-
-  const gridValueProperty = metric === 'frp' ? 'frp_sum' : 'count';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -233,11 +257,15 @@ export function FireMap({
       >
         <Map
           ref={mapRef}
-          initialViewState={{
-            longitude: 18.0,
-            latitude: 22.0,
-            zoom: 1.8,
-          }}
+          initialViewState={
+            regionMeta
+              ? {
+                  bounds: regionMeta.bbox as [number, number, number, number],
+                  fitBoundsOptions: { padding: 36 },
+                }
+              : { longitude: 30.0, latitude: 27.0, zoom: 4.8 }
+          }
+          onLoad={() => fitToRegion(0)}
           mapStyle={useFallbackStyle ? fallbackMapStyle : PLACEHOLDERS.BASEMAP_STYLE_URL}
           interactiveLayerIds={['grid-cells-fill', 'recent-points-layer']}
           onClick={handleMapClick}
@@ -259,20 +287,20 @@ export function FireMap({
                   'fill-color': [
                     'interpolate',
                     ['linear'],
-                    ['get', gridValueProperty],
+                    ['get', gridValueKey],
                     0,
                     DESIGN_TOKENS.thermalRamp[0],
-                    metric === 'frp' ? 1500 : 40,
+                    rampMax * 0.08,
                     DESIGN_TOKENS.thermalRamp[1],
-                    metric === 'frp' ? 3500 : 90,
+                    rampMax * 0.2,
                     DESIGN_TOKENS.thermalRamp[2],
-                    metric === 'frp' ? 6500 : 150,
+                    rampMax * 0.38,
                     DESIGN_TOKENS.thermalRamp[3],
-                    metric === 'frp' ? 10000 : 220,
+                    rampMax * 0.58,
                     DESIGN_TOKENS.thermalRamp[4],
-                    metric === 'frp' ? 15000 : 310,
+                    rampMax * 0.8,
                     DESIGN_TOKENS.thermalRamp[5],
-                    metric === 'frp' ? 22000 : 420,
+                    rampMax,
                     DESIGN_TOKENS.thermalRamp[6],
                   ],
                   'fill-opacity': 0.68,
@@ -282,9 +310,15 @@ export function FireMap({
                 id="grid-cells-outline"
                 type="line"
                 paint={{
-                  'line-color': '#FFC247',
-                  'line-width': 0.6,
-                  'line-opacity': 0.35,
+                  'line-color': [
+                    'match',
+                    ['get', 'cell_type'],
+                    'static_thermal',
+                    '#E85D75',
+                    '#FFC247',
+                  ],
+                  'line-width': 0.7,
+                  'line-opacity': 0.42,
                 }}
               />
             </Source>
@@ -368,6 +402,19 @@ export function FireMap({
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <div>
+                      Classification:{' '}
+                      <strong
+                        style={{
+                          color:
+                            inspected.cellType === 'static_thermal' ? '#E85D75' : '#4ADE80',
+                        }}
+                      >
+                        {inspected.cellType === 'static_thermal'
+                          ? 'Type 2 Static Industrial / Flare'
+                          : 'Type 0 Vegetation Fire Candidate'}
+                      </strong>
+                    </div>
                     <div>Harmonized count: {inspected.count?.toLocaleString()}</div>
                     <div>Integrated FRP: {inspected.frp.toLocaleString()} MW</div>
                   </div>

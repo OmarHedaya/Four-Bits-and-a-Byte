@@ -4,7 +4,7 @@ import { DESIGN_TOKENS } from '../../config/placeholders';
 import type { DailySummaryRecord } from '../../contracts/schemas';
 import { selectDayMetricValue } from '../../data/selectors';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
-import type { MetricFilter, SensorFilter } from '../../store/useFilterStore';
+import { useFilterStore, type MetricFilter, type SensorFilter } from '../../store/useFilterStore';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -75,6 +75,7 @@ export function CalendarHeatmap({
   onResetFilters,
 }: CalendarHeatmapProps) {
   const reducedMotion = useReducedMotion();
+  const audienceMode = useFilterStore((s) => s.audienceMode);
   const [hoveredRecord, setHoveredRecord] = useState<DailySummaryRecord | null>(null);
   const [focusedIndex, setFocusedIndex] = useState<number>(0);
   const [showAnomaliesOnly, setShowAnomaliesOnly] = useState<boolean>(false);
@@ -420,7 +421,7 @@ export function CalendarHeatmap({
 
           return (
             <div
-              key={year}
+              key={`${year}-${audienceMode}-${sensor}-${metric}`}
               role="rowgroup"
               aria-label={`Year ${year}`}
               style={{

@@ -12,11 +12,21 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 BACKEND_ROOT = Path(__file__).resolve().parent
+if str(BACKEND_ROOT) not in sys.path:
+    sys.path.insert(0, str(BACKEND_ROOT))
+
+from src.firecast_model import (  # noqa: E402
+    DateValidationError,
+    build_firecast_artifacts,
+    predict_for_date,
+)
+
 PROJECT_ROOT = BACKEND_ROOT.parent
 ANALYSIS_DIR = BACKEND_ROOT / "data" / "analysis"
 INDEX_DIR = BACKEND_ROOT / "data" / "index"
@@ -57,7 +67,7 @@ class FireScopeAPIHandler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -65,9 +75,53 @@ class FireScopeAPIHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self) -> None:
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
+
+    def do_POST(self) -> None:
+        parsed_url = urlparse(self.path)
+        route = parsed_url.path.rstrip("/")
+        if route == "/api/firescope/firecast/report-hazard":
+            length = int(self.headers.get("Content-Length", "0") or 0)
+            raw_body = self.rfile.read(length).decode("utf-8") if length > 0 else "{}"
+            try:
+                payload = json.loads(raw_body)
+            except json.JSONDecodeError:
+                self._send_json({"error": "Invalid JSON payload"}, 400)
+                return
+
+            danger_type = str(payload.get("danger_type") or "Active Vegetation Fire / Critical Thermal Anomaly").strip()
+            severity = str(payload.get("severity") or "EXTREME").upper().strip()
+            if severity not in ("LOW", "MODERATE", "HIGH", "EXTREME"):
+                severity = "EXTREME"
+            location_label = str(payload.get("location") or "Nile Delta & Cairo Agricultural Corridor").strip()
+            lat = payload.get("latitude", 30.785)
+            lon = payload.get("longitude", 31.495)
+            try:
+                lat_f = float(lat)
+                lon_f = float(lon)
+            except (TypeError, ValueError):
+                self._send_json({"error": "Invalid coordinates supplied"}, 400)
+                return
+
+            self._send_json(
+                {
+                    "status": "alert_triggered",
+                    "emergency_alert": {
+                        "active": severity == "EXTREME" or bool(payload.get("force_alarm", True)),
+                        "heading": "EXTREME FIRE RISK ALERT" if severity == "EXTREME" else "ACTIVE FIRE HAZARD ALERT",
+                        "danger_type": danger_type,
+                        "severity": severity,
+                        "location": location_label,
+                        "coordinates": {"lat": round(lat_f, 4), "lon": round(lon_f, 4)},
+                    },
+                },
+                200,
+            )
+            return
+
+        self._send_json({"error": f"Unknown POST endpoint: {route}"}, 404)
 
     def do_GET(self) -> None:
         parsed_url = urlparse(self.path)
@@ -94,10 +148,43 @@ class FireScopeAPIHandler(BaseHTTPRequestHandler):
                         "/api/firescope/bundle",
                         "/api/firescope/baseline",
                         "/api/firescope/visualizations",
+                        "/api/firescope/firecast/predict?date=YYYY-MM-DD&region_id=all",
+                        "/api/firescope/firecast/evaluation",
+                        "/api/firescope/firecast/report-hazard",
                         "/api/firescope/table/analysis/<table_name>",
                         "/api/firescope/table/index/<table_name>",
                     ],
                 }
+            )
+            return
+
+        if route == "/api/firescope/firecast/predict":
+            target_date = query.get("date", [""])[0]
+            region_id = query.get("region_id", ["all"])[0]
+            try:
+                result = predict_for_date(target_date, region_id=region_id)
+                self._send_json(result, 200)
+            except DateValidationError as exc:
+                self._send_json({"error": str(exc), "code": "INVALID_DATE"}, 400)
+            return
+
+        if route == "/api/firescope/firecast/evaluation":
+            artifacts = build_firecast_artifacts()
+            self._send_json(
+                {
+                    "model_id": artifacts["model_id"],
+                    "model_status": artifacts["model_status"],
+                    "splits": artifacts["splits"],
+                    "regions": {
+                        rid: {
+                            "thresholds": rdata["thresholds"],
+                            "validation_2024_h2": rdata["validation_2024_h2"],
+                            "test_2025_out_of_sample": rdata["test_2025_out_of_sample"],
+                        }
+                        for rid, rdata in artifacts["regions"].items()
+                    },
+                },
+                200,
             )
             return
 

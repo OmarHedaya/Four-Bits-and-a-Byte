@@ -1,7 +1,16 @@
 import { create } from 'zustand';
+import { DATA_WINDOW } from '../config/placeholders';
+
+const FULL_RANGE: [number, number] = [DATA_WINDOW.minYear, DATA_WINDOW.maxYear];
+
+function shiftDate(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
 
 export type SensorFilter = 'merged' | 'modis' | 'viirs';
-export type MetricFilter = 'count' | 'frp';
+export type MetricFilter = 'count' | 'frp' | 'fai';
 export type AudienceMode = 'responder' | 'scientist' | 'planner';
 
 export interface FilterState {
@@ -37,7 +46,7 @@ export interface FilterState {
 
 export const useFilterStore = create<FilterState>((set) => ({
   regionId: 'all',
-  yearRange: [2023, 2025],
+  yearRange: FULL_RANGE,
   sensor: 'merged',
   metric: 'count',
   selectedDate: null,
@@ -65,14 +74,14 @@ export const useFilterStore = create<FilterState>((set) => ({
       if (audienceMode === 'responder') {
         return {
           audienceMode,
-          yearRange: [2024, 2025],
+          yearRange: [DATA_WINDOW.maxYear - 1, DATA_WINDOW.maxYear],
           sensor: 'merged',
           metric: 'frp',
-          selectedDate: '2025-10-12',
+          selectedDate: DATA_WINDOW.latestDate,
           highlightedRange: {
-            start: '2025-10-01',
-            end: '2025-10-28',
-            label: 'Responder triage window (Oct 2025 Nile Delta autumn peak)',
+            start: shiftDate(DATA_WINDOW.latestDate, -(DATA_WINDOW.responderDays - 1)),
+            end: DATA_WINDOW.latestDate,
+            label: `Responder triage window (last ${DATA_WINDOW.responderDays} observed days)`,
           },
           showModisPoints: true,
           showViirsPoints: true,
@@ -82,7 +91,7 @@ export const useFilterStore = create<FilterState>((set) => ({
       if (audienceMode === 'planner') {
         return {
           audienceMode,
-          yearRange: [2023, 2025],
+          yearRange: FULL_RANGE,
           sensor: 'merged',
           metric: 'count',
           selectedDate: null,
@@ -93,7 +102,7 @@ export const useFilterStore = create<FilterState>((set) => ({
       // scientist default
       return {
         audienceMode,
-        yearRange: [2023, 2025],
+        yearRange: FULL_RANGE,
         sensor: 'merged',
         metric: 'frp',
         selectedDate: null,
@@ -109,11 +118,14 @@ export const useFilterStore = create<FilterState>((set) => ({
   setShowGridHeat: (showGridHeat) => set({ showGridHeat }),
 
   jumpToAnomaly: ({ regionId, startDate, endDate, label }) => {
-    const startYear = Number(startDate.slice(0, 4)) || 2023;
-    const endYear = Number(endDate.slice(0, 4)) || 2025;
+    const startYear = Number(startDate.slice(0, 4)) || DATA_WINDOW.minYear;
+    const endYear = Number(endDate.slice(0, 4)) || DATA_WINDOW.maxYear;
     set({
       regionId,
-      yearRange: [Math.max(2023, startYear), Math.min(2025, Math.max(endYear, startYear))],
+      yearRange: [
+        Math.max(DATA_WINDOW.minYear, startYear - 1),
+        Math.min(DATA_WINDOW.maxYear, endYear + 1),
+      ],
       selectedDate: startDate,
       highlightedRange: { start: startDate, end: endDate, label },
     });
@@ -122,7 +134,7 @@ export const useFilterStore = create<FilterState>((set) => ({
   resetFilters: () =>
     set({
       regionId: 'all',
-      yearRange: [2023, 2025],
+      yearRange: FULL_RANGE,
       sensor: 'merged',
       metric: 'count',
       selectedDate: null,

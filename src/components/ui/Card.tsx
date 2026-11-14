@@ -82,7 +82,17 @@ export function Card({
           {action && <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>{action}</div>}
         </header>
       )}
-      <div style={{ padding: noPadding ? 0 : '15px 18px', flex: 1 }}>{children}</div>
+      <div
+        style={{
+          padding: noPadding ? 0 : '15px 18px',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0,
+        }}
+      >
+        {children}
+      </div>
     </Component>
   );
 }

@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { USE_MOCK } from '../config/placeholders';
 import type { HarmonizedDataset } from '../contracts/schemas';
 import { loadHarmonizedDataset } from '../data/loaders';
 import { generateMockDataset } from '../data/mockGenerator';
@@ -11,32 +12,55 @@ export interface UseFireDataResult {
 }
 
 /**
- * React hook that loads and validates the harmonized Egypt 2023–2025 FireScope dataset.
- * Initializes synchronously from the embedded validated dataset for zero layout shift,
- * and supports async reload from /sample-data/ contracts.
+ * React hook that loads and validates the harmonized fire dataset.
+ * - Initializes immediately when USE_MOCK is true for zero layout shift.
+ * - Fetches and validates remote/public JSON & GeoJSON files when USE_MOCK is false.
  */
 export function useFireData(): UseFireDataResult {
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('success');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(() =>
+    USE_MOCK ? 'success' : 'loading',
+  );
   const [data, setData] = useState<HarmonizedDataset | null>(() =>
-    generateMockDataset(202610),
+    USE_MOCK ? generateMockDataset(202610) : null,
   );
   const [error, setError] = useState<string | null>(null);
 
   const fetchDataset = useCallback(() => {
+    if (USE_MOCK) {
+      setData(generateMockDataset(202610));
+      setStatus('success');
+      setError(null);
+      return;
+    }
+
+    let cancelled = false;
     setStatus('loading');
     setError(null);
 
     loadHarmonizedDataset(false)
       .then((loaded) => {
-        setData(loaded);
-        setStatus('success');
+        if (!cancelled) {
+          setData(loaded);
+          setStatus('success');
+        }
       })
-      .catch(() => {
-        // Fallback to embedded FireScope Egypt dataset if static fetch is offline
-        setData(generateMockDataset(202610));
-        setStatus('success');
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Unknown data loading error');
+          setStatus('error');
+        }
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!USE_MOCK) {
+      return fetchDataset();
+    }
+  }, [fetchDataset]);
 
   return {
     status,

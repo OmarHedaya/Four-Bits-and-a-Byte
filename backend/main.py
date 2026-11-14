@@ -8,6 +8,7 @@ Usage:
     python main.py phase5                  # Phase 5 using the latest frozen baseline
     python main.py phase5 --baseline-version v1
     python main.py phase6     # Phase 6 visualizations (read-only on Phase 4/5 outputs)
+    python main.py phase7     # Export the 8 website data files to data/web_export/
 """
 
 from __future__ import annotations
@@ -47,8 +48,12 @@ def main() -> None:
         from run_phase6 import run_phase6
 
         run_phase6()
+    elif phase == "phase7":
+        from export_web_data import run_export
+
+        run_export()
     else:
-        raise SystemExit(f"Unknown phase: {phase}. Use phase2, phase3, phase4, phase5 or phase6.")
+        raise SystemExit(f"Unknown phase: {phase}. Use phase2 to phase7.")
 
 
 if __name__ == "__main__":

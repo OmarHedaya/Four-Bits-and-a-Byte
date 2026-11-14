@@ -8,6 +8,7 @@ import type {
   RiskPeriodRecord,
   SeasonalityRecord,
 } from '../contracts/schemas';
+import { FIRESCOPE_BUNDLE } from './firescopeBundle';
 import type { MetricFilter, SensorFilter } from '../store/useFilterStore';
 
 export interface DailyFilterParams {
@@ -36,18 +37,28 @@ export function selectFilteredDailySummary(
         (r) =>
           r.region_id === regionId && r.date >= minDate && r.date <= maxDate,
       )
+      .map((r) => {
+        const faiInfo = FIRESCOPE_BUNDLE.faiDailyByDate?.[r.date];
+        if (!faiInfo) return r;
+        const share = Math.min(1, r.count_merged / 32.5);
+        return {
+          ...r,
+          fai_daily:
+            r.fai_daily !== undefined
+              ? r.fai_daily
+              : faiInfo.fai_daily !== null
+                ? Number((faiInfo.fai_daily * share).toFixed(2))
+                : null,
+          usable_day: r.usable_day ?? faiInfo.usable_day,
+        };
+      })
       .sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  // If dataset already provides explicit national/global 'all' rows, return them directly
-  const explicitAllRows = dataset.dailySummary.filter(
-    (r) => r.region_id === 'all' && r.date >= minDate && r.date <= maxDate,
-  );
-  if (explicitAllRows.length > 0) {
-    return explicitAllRows.sort((a, b) => a.date.localeCompare(b.date));
-  }
+  // If dataset already has explicit 'all' rows AND no regional rows (or alongside regional rows)
+  const regionalRows = dataset.dailySummary.filter((r) => r.region_id !== 'all');
+  const sourceRows = regionalRows.length > 0 ? regionalRows : dataset.dailySummary;
 
-  // Fallback for datasets without explicit 'all' rows: aggregate across sub-regions by date
   const byDate = new Map<
     string,
     {
@@ -55,13 +66,16 @@ export function selectFilteredDailySummary(
       count_viirs: number;
       count_merged: number;
       total_frp: number;
+      frp_modis: number;
+      frp_viirs: number;
+      has_sensor_frp: boolean;
       weighted_high_conf: number;
       weight_sum: number;
       max_anomaly_z: number;
     }
   >();
 
-  for (const r of dataset.dailySummary) {
+  for (const r of sourceRows) {
     if (r.date < minDate || r.date > maxDate) continue;
     const existing = byDate.get(r.date);
     const weight = Math.max(1, r.count_merged);
@@ -71,6 +85,9 @@ export function selectFilteredDailySummary(
         count_viirs: r.count_viirs,
         count_merged: r.count_merged,
         total_frp: r.total_frp,
+        frp_modis: r.frp_modis ?? 0,
+        frp_viirs: r.frp_viirs ?? 0,
+        has_sensor_frp: r.frp_modis !== undefined && r.frp_viirs !== undefined,
         weighted_high_conf: r.high_conf_share * weight,
         weight_sum: weight,
         max_anomaly_z: r.anomaly_z,
@@ -80,6 +97,10 @@ export function selectFilteredDailySummary(
       existing.count_viirs += r.count_viirs;
       existing.count_merged += r.count_merged;
       existing.total_frp = Number((existing.total_frp + r.total_frp).toFixed(1));
+      existing.frp_modis = Number((existing.frp_modis + (r.frp_modis ?? 0)).toFixed(1));
+      existing.frp_viirs = Number((existing.frp_viirs + (r.frp_viirs ?? 0)).toFixed(1));
+      existing.has_sensor_frp =
+        existing.has_sensor_frp && r.frp_modis !== undefined && r.frp_viirs !== undefined;
       existing.weighted_high_conf += r.high_conf_share * weight;
       existing.weight_sum += weight;
       if (r.anomaly_z > existing.max_anomaly_z) {
@@ -90,6 +111,7 @@ export function selectFilteredDailySummary(
 
   const aggregated: DailySummaryRecord[] = [];
   for (const [date, item] of byDate.entries()) {
+    const faiInfo = FIRESCOPE_BUNDLE.faiDailyByDate?.[date];
     aggregated.push({
       date,
       region_id: 'all',
@@ -97,10 +119,20 @@ export function selectFilteredDailySummary(
       count_viirs: item.count_viirs,
       count_merged: item.count_merged,
       total_frp: item.total_frp,
+      ...(item.has_sensor_frp ? { frp_modis: item.frp_modis, frp_viirs: item.frp_viirs } : {}),
       high_conf_share: Number(
         (item.weighted_high_conf / Math.max(1, item.weight_sum)).toFixed(3),
       ),
       anomaly_z: item.max_anomaly_z,
+      ...(faiInfo
+        ? {
+            fai_daily: faiInfo.fai_daily,
+            fai_excl3x3_daily: faiInfo.fai_excl3x3_daily,
+            usable_day: faiInfo.usable_day,
+            static_detections: faiInfo.static_detections,
+            static_cells: faiInfo.static_cells,
+          }
+        : {}),
     });
   }
 
@@ -115,6 +147,13 @@ export function selectDayMetricValue(
   sensor: SensorFilter,
   metric: MetricFilter,
 ): number {
+  if (metric === 'fai') {
+    if (record.fai_daily !== undefined && record.fai_daily !== null) {
+      return Number(record.fai_daily.toFixed(1));
+    }
+    return Number(((record.count_merged / 32.4975) * 100).toFixed(1));
+  }
+
   if (metric === 'count') {
     if (sensor === 'modis') return record.count_modis;
     if (sensor === 'viirs') return record.count_viirs;
@@ -125,9 +164,12 @@ export function selectDayMetricValue(
   if (sensor === 'merged') {
     return record.total_frp;
   }
+  if (sensor === 'modis' && record.frp_modis !== undefined) return record.frp_modis;
+  if (sensor === 'viirs' && record.frp_viirs !== undefined) return record.frp_viirs;
+
+  // Fallback for datasets without per-sensor FRP: split total_frp by detection share.
   const combinedRaw = Math.max(1, record.count_modis + record.count_viirs);
   if (sensor === 'modis') {
-    // MODIS 1km pixels carry ~44% of total integrated radiative power on average
     const modisShare = (record.count_modis / combinedRaw) * 1.45;
     return Number((record.total_frp * Math.min(0.85, modisShare)).toFixed(1));
   }
@@ -146,6 +188,8 @@ export interface OverviewKpis {
   peakValue: number;
   viirsToModisRatio: number;
   activeDaysCount: number;
+  meanFai: number;
+  totalStaticDetections: number;
 }
 
 /**
@@ -168,6 +212,8 @@ export function selectOverviewKpis(
       peakValue: 0,
       viirsToModisRatio: 0,
       activeDaysCount: 0,
+      meanFai: 0,
+      totalStaticDetections: 0,
     };
   }
 
@@ -177,6 +223,9 @@ export function selectOverviewKpis(
   let totalFrpMw = 0;
   let highConfSum = 0;
   let anomalyDaysCount = 0;
+  let faiSum = 0;
+  let faiCount = 0;
+  let totalStaticDetections = 0;
   let peakDate: string | null = records[0].date;
   let peakValue = -1;
 
@@ -186,6 +235,11 @@ export function selectOverviewKpis(
     totalViirs += r.count_viirs;
     totalFrpMw += r.total_frp;
     highConfSum += r.high_conf_share;
+    totalStaticDetections += r.static_detections ?? 0;
+    if (r.fai_daily !== undefined && r.fai_daily !== null) {
+      faiSum += r.fai_daily;
+      faiCount += 1;
+    }
     if (r.anomaly_z >= 2.0) {
       anomalyDaysCount += 1;
     }
@@ -207,6 +261,8 @@ export function selectOverviewKpis(
     peakValue: Number(peakValue.toFixed(1)),
     viirsToModisRatio: Number((totalViirs / Math.max(1, totalModis)).toFixed(2)),
     activeDaysCount: records.length,
+    meanFai: faiCount > 0 ? Number((faiSum / faiCount).toFixed(1)) : 100.0,
+    totalStaticDetections,
   };
 }
 
@@ -217,6 +273,7 @@ export interface MonthlyClimatologyPoint {
   meanFrp: number;
   meanModis: number;
   meanViirs: number;
+  meanFai: number;
 }
 
 const MONTH_SHORT_NAMES = [
@@ -256,7 +313,22 @@ export function selectSeasonalityData(
   });
 
   // Fallback: if external dataset omitted region_id on seasonality, derive from dailySummary
-  let matrixRecords = matching;
+  let matrixRecords: SeasonalityRecord[] = matching.map((s) => {
+    const faiMonthRow = FIRESCOPE_BUNDLE.faiMonthly?.find(
+      (fm) =>
+        fm.series_id === 'headline_N20_SNPP_core_all' &&
+        Number(fm.year) === s.year &&
+        Number(fm.month) === s.month,
+    );
+    return {
+      ...s,
+      fai: s.fai ?? (faiMonthRow?.FAI !== undefined && faiMonthRow.FAI !== null ? Number(faiMonthRow.FAI.toFixed(1)) : null),
+      fai_sa: s.fai_sa ?? (faiMonthRow?.FAI_sa !== undefined && faiMonthRow.FAI_sa !== null ? Number(faiMonthRow.FAI_sa.toFixed(1)) : null),
+      kappa: s.kappa ?? faiMonthRow?.kappa,
+      quality_label: s.quality_label ?? faiMonthRow?.quality_label,
+    };
+  });
+
   if (matrixRecords.length === 0) {
     const daily = selectFilteredDailySummary(dataset, { regionId, yearRange });
     const map = new Map<string, SeasonalityRecord>();
@@ -290,6 +362,10 @@ export function selectSeasonalityData(
     const sumFrp = forMonth.reduce((a, r) => a + r.frp_sum, 0);
     const sumModis = forMonth.reduce((a, r) => a + (r.count_modis ?? Math.round(r.count * 0.38)), 0);
     const sumViirs = forMonth.reduce((a, r) => a + (r.count_viirs ?? Math.round(r.count * 1.25)), 0);
+    const sumFai = forMonth.reduce(
+      (a, r) => a + (r.fai ?? Number(((r.count / 30 / 32.4975) * 100).toFixed(1))),
+      0,
+    );
 
     monthlyClimatology.push({
       month: m,
@@ -298,6 +374,7 @@ export function selectSeasonalityData(
       meanFrp: Number((sumFrp / divisor).toFixed(1)),
       meanModis: Math.round(sumModis / divisor),
       meanViirs: Math.round(sumViirs / divisor),
+      meanFai: Number((sumFai / divisor).toFixed(1)),
     });
   }
 
@@ -315,6 +392,31 @@ function isWithinBbox(
   bbox: readonly [number, number, number, number],
 ): boolean {
   return lon >= bbox[0] && lat >= bbox[1] && lon <= bbox[2] && lat <= bbox[3];
+}
+
+/**
+ * Collapses per-month features into one feature per cell (counts and FRP summed),
+ * so a cell is drawn once instead of as up to 12 stacked polygons.
+ */
+export function aggregateGridCellsByCell(
+  features: GridCellsGeoJson['features'],
+): GridCellsGeoJson['features'] {
+  const byCell = new Map<string, GridCellsGeoJson['features'][number]>();
+  for (const f of features) {
+    const existing = byCell.get(f.properties.cell_id);
+    if (!existing) {
+      byCell.set(f.properties.cell_id, {
+        ...f,
+        properties: { ...f.properties, month: 'all' },
+      });
+    } else {
+      existing.properties.count += f.properties.count;
+      existing.properties.frp_sum = Number(
+        (existing.properties.frp_sum + f.properties.frp_sum).toFixed(1),
+      );
+    }
+  }
+  return Array.from(byCell.values());
 }
 
 /**
@@ -343,17 +445,16 @@ export function selectFilteredGridCells(
     if (!regionOk) return false;
 
     if (selectedMonth !== null) {
+      if (props.month === 'all') return true;
       const cellMonth =
         typeof props.month === 'number'
           ? props.month
           : Number(String(props.month).slice(-2));
-      // Match selected month if available; if no cells for that exact off-season month, keep regional cells
       return cellMonth === selectedMonth;
     }
     return true;
   });
 
-  // If a user clicks an off-peak month that had 0 pre-aggregated peak cells, return regional cells scaled down
   if (filteredFeatures.length === 0 && selectedMonth !== null) {
     const fallbackFeatures = dataset.gridCells.features.filter((f) =>
       regionId === 'all'
@@ -365,20 +466,21 @@ export function selectFilteredGridCells(
     );
     return {
       type: 'FeatureCollection',
-      features: fallbackFeatures,
+      features: aggregateGridCellsByCell(fallbackFeatures),
     };
   }
 
   return {
     type: 'FeatureCollection',
-    features: filteredFeatures,
+    features:
+      selectedMonth === null ? aggregateGridCellsByCell(filteredFeatures) : filteredFeatures,
   };
 }
 
 export interface RecentPointsFilterParams {
   regionId: string;
   selectedDate: string | null;
-  highlightedRange: { start: string; end: string } | null;
+  highlightedRange: { start: string; end: string; label?: string } | null;
   showModis: boolean;
   showViirs: boolean;
 }

@@ -136,12 +136,23 @@ output,
   z-index: 1;
   display: grid;
   grid-template-columns: 256px minmax(0, 1fr);
+  align-items: start;
   flex: 1;
   min-height: calc(100vh - 64px);
 }
 
 .app-body--no-rail {
   grid-template-columns: minmax(0, 1fr);
+}
+
+.filter-rail-sticky {
+  position: sticky;
+  top: 63px;
+  height: calc(100vh - 63px);
+  max-height: calc(100vh - 63px);
+  overflow-y: auto;
+  align-self: start;
+  z-index: 30;
 }
 
 /* Galactic gold-to-periwinkle headline gradient matching the Milky Way core */
@@ -219,7 +230,7 @@ output,
   min-width: 0;
 }
 
-/* Calendar cell left-to-right load animation (the single deliberate motion) */
+/* Calendar cell left-to-right load animation & audience mode transition */
 @keyframes cellReveal {
   from {
     opacity: 0;
@@ -231,8 +242,66 @@ output,
   }
 }
 
+@keyframes asideModeReveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .calendar-cell-animated {
   animation: cellReveal 260ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.audience-mode-animated {
+  animation: asideModeReveal 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Emergency Alert System: non-blocking screen perimeter pulse & reduced-motion static fallback */
+@keyframes emergencyScreenPulse {
+  0%, 100% {
+    opacity: 0.25;
+    box-shadow: inset 0 0 40px 8px rgba(255, 59, 48, 0.35);
+  }
+  50% {
+    opacity: 0.92;
+    box-shadow: inset 0 0 95px 24px rgba(255, 59, 48, 0.78);
+  }
+}
+
+@keyframes emergencyBannerGlow {
+  0%, 100% {
+    box-shadow: 0 0 24px rgba(255, 59, 48, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 48px rgba(255, 59, 48, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+}
+
+.emergency-screen-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  border: 4px solid #FF3B30;
+  animation: emergencyScreenPulse 1.15s ease-in-out infinite;
+}
+
+.emergency-screen-static {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  border: 5px solid #FF3B30;
+  box-shadow: inset 0 0 36px 8px rgba(255, 59, 48, 0.42);
+}
+
+.emergency-banner-pulse {
+  animation: emergencyBannerGlow 1.15s ease-in-out infinite;
 }
 
 /* Respect prefers-reduced-motion */
@@ -244,7 +313,9 @@ output,
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .calendar-cell-animated {
+  .calendar-cell-animated,
+  .emergency-screen-flash,
+  .emergency-banner-pulse {
     animation: none !important;
   }
 }
@@ -264,5 +335,10 @@ output,
 @media (max-width: 860px) {
   .app-body {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .filter-rail-sticky {
+    position: static;
+    height: auto;
+    max-height: none;
   }
 }

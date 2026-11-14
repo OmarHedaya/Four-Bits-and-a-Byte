@@ -27,18 +27,7 @@ async function fetchAndValidate<T>(
   return parser.parse(rawJson);
 }
 
-/**
- * Loads the complete harmonized dataset.
- * - When VITE_USE_MOCK !== 'false', returns the deterministic seeded mock dataset synchronously wrapped in a Promise.
- * - When VITE_USE_MOCK === 'false', fetches all 8 contract files from VITE_DATA_BASE_URL and validates with Zod.
- */
-export async function loadHarmonizedDataset(
-  forceUseMock: boolean = USE_MOCK,
-): Promise<HarmonizedDataset> {
-  if (forceUseMock) {
-    return generateMockDataset(202610);
-  }
-
+async function fetchRealDataset(): Promise<HarmonizedDataset> {
   const [
     dailySummary,
     gridCells,
@@ -70,4 +59,28 @@ export async function loadHarmonizedDataset(
     regionMeta,
     isDemoData: false,
   };
+}
+
+// Several components call useFireData(); they must share one download (the grid file alone is ~3.6 MB).
+let inflight: Promise<HarmonizedDataset> | null = null;
+
+/**
+ * Loads the complete harmonized dataset.
+ * - When VITE_USE_MOCK === 'true', returns the deterministic seeded mock dataset wrapped in a Promise.
+ * - Otherwise fetches all 8 contract files from VITE_DATA_BASE_URL once (shared by every caller)
+ *   and validates them with Zod. A failed load is not cached, so "Retry" really refetches.
+ */
+export function loadHarmonizedDataset(
+  forceUseMock: boolean = USE_MOCK,
+): Promise<HarmonizedDataset> {
+  if (forceUseMock) {
+    return Promise.resolve(generateMockDataset(202610));
+  }
+  if (!inflight) {
+    inflight = fetchRealDataset().catch((err: unknown) => {
+      inflight = null;
+      throw err;
+    });
+  }
+  return inflight;
 }

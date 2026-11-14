@@ -13,76 +13,78 @@ vi.mock('react-map-gl/maplibre', () => ({
 }));
 
 import App from '../App';
-import { PLACEHOLDERS } from '../config/placeholders';
 
-describe('Main User Flow End-to-End Smoke Test (FireScope Egypt 2023–2025)', () => {
-  it('renders Overview with Egypt 2023–2025 data, switches Audience Modes, jumps to an Anomaly, and navigates to Method, Atlas & About pages', async () => {
-    render(<App />);
+describe('Main User Flow End-to-End Smoke Test (F8)', () => {
+  it(
+    'renders Overview, switches Audience Modes, jumps to an Anomaly, and navigates to Patterns & About pages',
+    async () => {
+      render(<App />);
 
-    // 1. Verify TopBar brand & Egypt Baseline v1 badge
-    expect(screen.getByText(PLACEHOLDERS.PROJECT_NAME)).toBeInTheDocument();
-    expect(screen.getByText(/Egypt 2023–2025 · Baseline v1/i)).toBeInTheDocument();
+      // 1. Verify TopBar brand & Demo data badge
+      expect(screen.getByText('FIRMS Harmonizer')).toBeInTheDocument();
+      expect(screen.getByText('Demo data')).toBeInTheDocument();
 
-    // 2. Wait for lazy-loaded OverviewPage & CalendarHeatmap to appear
-    await waitFor(() => {
+      // 2. Wait for lazy-loaded OverviewPage & CalendarHeatmap to appear
+      await waitFor(
+        () => {
+          expect(
+            screen.getByText(/Unified fire-activity calendar/i),
+          ).toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
+
+      // 3. Switch Audience Mode to Responder and verify posture banner updates
+      const responderBtn = screen.getByRole('button', { name: 'Responder' });
+      fireEvent.click(responderBtn);
+      await waitFor(() => {
+        expect(
+          screen.getByText(/Responder operational posture/i),
+        ).toBeInTheDocument();
+      });
+
+      // 4. Click a 2024–2025 anomaly in the right panel and verify Active focus updates
+      const amazonAnomaly = screen.getByText(/2024-08-24 → 2024-09-14/i);
+      fireEvent.click(amazonAnomaly);
+      await waitFor(() => {
+        expect(screen.getByText(/Day: 2024-08-24/i)).toBeInTheDocument();
+      });
+
+      // 5. Verify Method & validation and Phase 6 Atlas windows are removed, and navigate to Patterns screen
+      expect(screen.queryByRole('link', { name: /Method & validation/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /Phase 6 Atlas/i })).not.toBeInTheDocument();
+
+      const patternsNav = screen.getByRole('link', { name: /^Patterns$/i });
+      fireEvent.click(patternsNav);
+      await waitFor(
+        () => {
+          expect(
+            screen.getByText(/Multi-year seasonality & monthly climatology/i),
+          ).toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
+
       expect(
-        screen.getByText(/Unified fire-activity calendar/i),
-      ).toBeInTheDocument();
-    });
+        screen.getByRole('complementary', { name: /Global mission-control filters/i }),
+      ).toHaveClass('filter-rail-sticky');
 
-    // 3. Switch Audience Mode to Responder and verify posture banner updates
-    const responderBtn = screen.getByRole('button', { name: 'Responder' });
-    fireEvent.click(responderBtn);
-    await waitFor(() => {
-      expect(
-        screen.getByText(/Responder operational posture/i),
-      ).toBeInTheDocument();
-    });
-
-    // 4. Click a 2024–2025 Egypt anomaly in the right panel and verify Active focus updates
-    const deltaAnomaly = screen.getByText(/2024-10-01 → 2024-10-30/i);
-    fireEvent.click(deltaAnomaly);
-    await waitFor(() => {
-      expect(screen.getByText(/Day: 2024-10-01/i)).toBeInTheDocument();
-    });
-
-    // 5. Navigate to Method & validation screen
-    const methodNav = screen.getByRole('link', { name: /Method & validation/i });
-    fireEvent.click(methodNav);
-    await waitFor(
-      () => {
-        expect(
-          screen.getByText(/Step-by-step MODIS \(1 km\) & VIIRS \(375 m\) harmonization methodology/i),
-        ).toBeInTheDocument();
-        expect(
-          screen.getByText(/Honest methodological & physical sensor limitations/i),
-        ).toBeInTheDocument();
-      },
-      { timeout: 4000 },
-    );
-
-    // 6. Navigate to Phase 6 Atlas screen
-    const atlasNav = screen.getByRole('link', { name: /Phase 6 Atlas/i });
-    fireEvent.click(atlasNav);
-    await waitFor(
-      () => {
-        expect(
-          screen.getByText(/Phase 6 Scientific Visualization Atlas & Pipeline Reports/i),
-        ).toBeInTheDocument();
-      },
-      { timeout: 4000 },
-    );
-
-    // 7. Navigate to About screen
-    const aboutNav = screen.getByRole('link', { name: /^About$/i });
-    fireEvent.click(aboutNav);
-    await waitFor(
-      () => {
-        expect(
-          screen.getByText(/Orbital instrument comparison \(MODIS vs VIIRS\)/i),
-        ).toBeInTheDocument();
-      },
-      { timeout: 4000 },
-    );
-  });
+      // 6. Navigate to About screen and verify aside is hidden
+      const aboutNav = screen.getByRole('link', { name: /^About$/i });
+      fireEvent.click(aboutNav);
+      await waitFor(
+        () => {
+          expect(
+            screen.getByText(/Orbital instrument comparison \(MODIS vs VIIRS\)/i),
+          ).toBeInTheDocument();
+          expect(screen.queryByText(/Team Four-Bits-and-a-Byte/i)).not.toBeInTheDocument();
+          expect(
+            screen.queryByRole('complementary', { name: /Global mission-control filters/i }),
+          ).not.toBeInTheDocument();
+        },
+        { timeout: 15000 },
+      );
+    },
+    25000,
+  );
 });

@@ -42,5 +42,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: true,
+    env: {
+      VITE_USE_MOCK: 'true',
+    },
   },
 });

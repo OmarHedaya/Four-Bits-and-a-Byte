@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import type { RegionMetaRecord } from '../../contracts/schemas';
 import { FilterRail } from './FilterRail';
 import { TopBar } from './TopBar';
@@ -13,15 +14,19 @@ export interface AppShellProps {
 export function AppShell({
   regions,
   isDemoData,
-  hideRail = false,
+  hideRail,
   children,
 }: AppShellProps) {
+  const { pathname } = useLocation();
+  const shouldHideRail =
+    hideRail ?? (pathname.startsWith('/about') || pathname.startsWith('/firecast'));
+
   return (
     <div className="app-shell">
       <div className="orbital-bg-stage" aria-hidden="true" />
       <TopBar isDemoData={isDemoData} />
-      <div className={hideRail ? 'app-body app-body--no-rail' : 'app-body'}>
-        {!hideRail && <FilterRail regions={regions} />}
+      <div className={shouldHideRail ? 'app-body app-body--no-rail' : 'app-body'}>
+        {!shouldHideRail && <FilterRail regions={regions} />}
         <main
           style={{
             padding: '14px 16px 28px',

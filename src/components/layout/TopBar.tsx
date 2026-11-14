@@ -14,12 +14,20 @@ const AUDIENCE_OPTIONS: ReadonlyArray<ToggleOption<AudienceMode>> = [
   { value: 'planner', label: 'Planner' },
 ];
 
-const NAV_ITEMS: ReadonlyArray<{ to: string; label: string; end?: boolean }> = [
+const NAV_ITEMS: ReadonlyArray<{
+  to: string;
+  label: string;
+  end?: boolean;
+  title?: string;
+}> = [
   { to: '/', label: 'Overview', end: true },
   { to: '/explore', label: 'Explore' },
-  { to: '/patterns', label: 'Patterns & FAI' },
-  { to: '/method', label: 'Method & validation' },
-  { to: '/atlas', label: 'Phase 6 Atlas' },
+  { to: '/patterns', label: 'Patterns' },
+  {
+    to: '/firecast',
+    label: 'FireCast',
+    title: 'Explore future fire risk through satellite-based environmental analysis.',
+  },
   { to: '/about', label: 'About' },
 ];
 
@@ -119,9 +127,9 @@ export function TopBar({ isDemoData }: TopBarProps) {
         ) : (
           <Badge
             tone="modis"
-            title="Empirical Egypt 2023–2025 NASA FIRMS archive (254,175 harmonized rows · Phase 5 Frozen Baseline v1)"
+            title="NASA FIRMS satellite fire & thermal monitoring across Egypt (2023–2025)"
           >
-            Egypt 2023–2025 · Baseline v1
+            Egypt 2023–2025
           </Badge>
         )}
       </div>
@@ -146,6 +154,7 @@ export function TopBar({ isDemoData }: TopBarProps) {
             key={item.to}
             to={item.to}
             end={item.end}
+            title={item.title}
             style={({ isActive }) => ({
               padding: '6px 13px',
               borderRadius: '7px',

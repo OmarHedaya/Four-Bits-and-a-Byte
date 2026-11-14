@@ -1,0 +1,13 @@
+sensor_key,year,input_file,input_origin,rows,sha256_matches_phase2
+MODIS,2023,MODIS_2023.csv,phase2_cleaned_file,1421,True
+MODIS,2024,MODIS_2024.csv,phase2_cleaned_file,1268,True
+MODIS,2025,MODIS_2025.csv,phase2_cleaned_file,1438,True
+NOAA20,2024,NOAA20_2024.csv,phase2_cleaned_file,28873,True
+NOAA20,2025,NOAA20_2025.csv,phase2_cleaned_file,26916,True
+NOAA21,2023,NOAA21_2023.csv,phase2_cleaned_file,26280,True
+NOAA21,2024,NOAA21_2024.csv,phase2_cleaned_file,27568,True
+NOAA21,2025,NOAA21_2025.csv,phase2_cleaned_file,25403,True
+SNPP,2023,SNPP_2023.csv,phase2_cleaned_file,30763,True
+SNPP,2024,SNPP_2024.csv,phase2_cleaned_file,27178,True
+SNPP,2025,SNPP_2025.csv,phase2_cleaned_file,26042,True
+NOAA20,2023,firescope_noaa20_2023_candidate.csv,noaa20_2023_full_year_candidate,31025,
