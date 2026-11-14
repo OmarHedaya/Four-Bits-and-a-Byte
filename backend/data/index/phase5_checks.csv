@@ -1,0 +1,54 @@
+check,passed,detail
+only VIIRS sensors in the index detections,True,"['NOAA20', 'NOAA21', 'SNPP']"
+"index detections == VIIRS type-0 rows (no static, no MODIS)",True,81232 vs 81232
+headline sensor set is NOAA20 + SNPP,True,
+coverage calendar: NOAA21 not observed before 2023-03-01,True,
+frozen B equals catalog B [N20_SNPP_core_excl_low],True,B=29.974283
+frozen B equals catalog B [N20_SNPP_excl3x3_all],True,B=21.176063
+frozen B equals catalog B [NOAA20_core_all],True,B=19.285847
+frozen B equals catalog B [NOAA21_core_all],True,B=17.708061
+frozen B equals catalog B [SNPP_core_all],True,B=18.043605
+frozen B equals catalog B [V3_core_all],True,B=45.537634
+frozen B equals catalog B [headline_N20_SNPP_core_all],True,B=32.497527
+mean of annual FAI on matched dates == 100 [N20_SNPP_core_excl_low],True,
+mean of annual FAI on matched dates == 100 [N20_SNPP_excl3x3_all],True,
+mean of annual FAI on matched dates == 100 [NOAA20_core_all],True,
+mean of annual FAI on matched dates == 100 [NOAA21_core_all],True,
+mean of annual FAI on matched dates == 100 [SNPP_core_all],True,
+mean of annual FAI on matched dates == 100 [V3_core_all],True,
+mean of annual FAI on matched dates == 100 [headline_N20_SNPP_core_all],True,
+headline |M| == 337 matched dates,True,337
+headline matched dates contain no 29 February,True,
+"headline B == 32,855 / 1,011",True,32.4975
+headline annual FAI on matched dates 127.287 / 99.181 / 73.532 (methodology section 7.1),True,"2023:127.287, 2024:99.181, 2025:73.532"
+"excl_low totals 13,002 / 9,899 / 7,403, B = 30,304/1,011 (methodology section 7.1)",True,
+matched totals equal Phase 4 table [headline_N20_SNPP_core_all vs VIIRS_NOAA20_SNPP_union],True,
+matched totals equal Phase 4 table [V3_core_all vs VIIRS_3sensor_union],True,
+matched totals equal Phase 4 table [NOAA20_core_all vs NOAA20],True,
+matched totals equal Phase 4 table [NOAA21_core_all vs NOAA21],True,
+matched totals equal Phase 4 table [SNPP_core_all vs SNPP],True,
+V3 excl3x3 (frozen mask) totals equal Phase 4 any-year static exclusion,True,"mine=[11128.0, 8515.0, 6384.0]"
+block cell-days sum to national cell-days on every usable day,True,
+no daily FAI on unusable days (never zero-filled),True,
+fai_monthly: no FAI where quality is insufficient or not_expected,True,
+fai_monthly: every published row has kappa >= 0.5,True,
+fai_seasonal: no FAI where quality is insufficient or not_expected,True,
+fai_seasonal: every published row has kappa >= 0.5,True,
+fai_yearly: no FAI where quality is insufficient or not_expected,True,
+fai_yearly: every published row has kappa >= 0.5,True,
+R(P) == (1 - sigma_P) / (1 - sigma_B),True,50 periods
+block outputs flagged national_calendar_proxy and not locally normalised,True,
+block outputs carry no rank column,True,
+block outputs only for blocks with >= 100 baseline cell-days,True,
+spread NA when fewer than two sensors,True,
+"spread table has no interval-style columns (ci, lower/upper bound)",True,
+fai_daily: coverage_basis column present,True,
+fai_daily: baseline_version column present,True,
+fai_monthly: coverage_basis column present,True,
+fai_monthly: baseline_version column present,True,
+fai_seasonal: coverage_basis column present,True,
+fai_seasonal: baseline_version column present,True,
+fai_yearly: coverage_basis column present,True,
+fai_yearly: baseline_version column present,True,
+baseline matched dates only from baseline years,True,
+"Phase 0-4 files unchanged by Phase 5 run (sha256 of data, code, reports)",True,69 files compared; changed: none

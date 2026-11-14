@@ -33,7 +33,6 @@ export function Card({
         boxShadow: heroBorder ? 'var(--shadow-hero)' : 'var(--shadow-panel)',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
         ...style,
       }}
       {...rest}

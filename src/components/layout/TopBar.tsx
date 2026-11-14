@@ -1,5 +1,4 @@
 import { NavLink } from 'react-router-dom';
-import { Orbit } from 'lucide-react';
 import { PLACEHOLDERS } from '../../config/placeholders';
 import { useFilterStore, type AudienceMode } from '../../store/useFilterStore';
 import { Badge } from '../ui/Badge';
@@ -18,8 +17,9 @@ const AUDIENCE_OPTIONS: ReadonlyArray<ToggleOption<AudienceMode>> = [
 const NAV_ITEMS: ReadonlyArray<{ to: string; label: string; end?: boolean }> = [
   { to: '/', label: 'Overview', end: true },
   { to: '/explore', label: 'Explore' },
-  { to: '/patterns', label: 'Patterns & anomalies' },
+  { to: '/patterns', label: 'Patterns & FAI' },
   { to: '/method', label: 'Method & validation' },
+  { to: '/atlas', label: 'Phase 6 Atlas' },
   { to: '/about', label: 'About' },
 ];
 
@@ -94,10 +94,6 @@ export function TopBar({ isDemoData }: TopBarProps) {
               }}
             >
               <span>{PLACEHOLDERS.PROJECT_NAME}</span>
-              <span className="orbital-pill" style={{ padding: '2px 8px', fontSize: '11px' }}>
-                <Orbit size={11} />
-                Terra · Aqua · S-NPP · NOAA-20
-              </span>
             </div>
             <div
               style={{
@@ -108,17 +104,24 @@ export function TopBar({ isDemoData }: TopBarProps) {
                 textShadow: '0 1px 6px rgba(0, 0, 0, 0.7)',
               }}
             >
-              Next-generation satellite earth observation &amp; active-fire harmonization
+              FireScope Egypt (2023–2025) · MODIS &amp; VIIRS (S-NPP, NOAA-20, NOAA-21)
             </div>
           </div>
         </NavLink>
 
-        {isDemoData && (
+        {isDemoData ? (
           <Badge
             tone="demo"
-            title="All statistics and hotspots currently rendered come from the deterministic seeded mock generator until real teammate files are switched via VITE_USE_MOCK=false."
+            title="All statistics and hotspots currently rendered come from the deterministic seeded mock generator."
           >
             Demo data
+          </Badge>
+        ) : (
+          <Badge
+            tone="modis"
+            title="Empirical Egypt 2023–2025 NASA FIRMS archive (254,175 harmonized rows · Phase 5 Frozen Baseline v1)"
+          >
+            Egypt 2023–2025 · Baseline v1
           </Badge>
         )}
       </div>

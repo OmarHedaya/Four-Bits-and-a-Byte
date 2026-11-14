@@ -1,0 +1,17 @@
+metric,value,note
+n_viirs_veg_cells,3596.0,
+n_veg_cells_static_same_cell,143.0,
+n_veg_cells_static_in_3x3,463.0,
+share_veg_cells_static_in_3x3,0.12875417130144606,
+share_veg_cell_days_in_static_3x3_cells,0.33407171839017435,
+spearman_distance_to_static_vs_veg_cell_days,-0.3066739115302719,descriptive; not causal
+top10_cells_with_static_in_3x3,10.0,of the 10 most active cells
+top_1pct_cells_with_static_in_3x3_share,0.8888888888888888,
+persistent_cells_any_year,21.0,
+persistent_cells_with_static_in_3x3,19.0,
+all_years_top_5pct_cells_share[all_viirs_veg_cells],0.36041232591292904,
+all_years_gini[all_viirs_veg_cells],0.6474204746266186,
+all_years_top_5pct_cells_share[excl_static_3x3_neighborhood],0.27941902974014426,
+all_years_gini[excl_static_3x3_neighborhood],0.5883786920889433,
+all_years_top_5pct_cells_share[excl_persistent_cells],0.31453062017386235,
+all_years_gini[excl_persistent_cells],0.6195351149748702,

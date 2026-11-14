@@ -1,0 +1,401 @@
+{
+ "figures": [
+  {
+   "id": "national_annual_fai",
+   "kind": "png",
+   "file": "data/visualizations/national/national_annual_fai.png",
+   "title": "National activity: annual FAI 2023, 2024, 2025",
+   "sources": [
+    "data/index/fai_yearly.csv"
+   ],
+   "communicates": "Annual detected-candidate activity index per usable day relative to the frozen 2023-2025 reference.",
+   "limitations": "The annual mean over the matched baseline dates is 100 by construction, so 'above/below 100' is relative to a 3-year reference, not to a normal level. Differences may reflect detection, processing, cloud and static-source effects as well as real activity; no cause is implied."
+  },
+  {
+   "id": "national_monthly_fai",
+   "kind": "png",
+   "file": "data/visualizations/national/national_monthly_fai.png",
+   "title": "National activity: monthly FAI time series",
+   "sources": [
+    "data/index/fai_monthly.csv"
+   ],
+   "communicates": "Month-to-month variation of the headline index, with the share of usable days beneath each month.",
+   "limitations": "Hollow markers = partial coverage; grey shading = no published value. Months with fewer usable days are less reliable. The strong seasonal pattern should not be read as causal."
+  },
+  {
+   "id": "national_daily_fai",
+   "kind": "png",
+   "file": "data/visualizations/national/national_daily_fai.png",
+   "title": "National activity: daily FAI time series",
+   "sources": [
+    "data/index/fai_daily.csv"
+   ],
+   "communicates": "Day-level variability of detected candidate activity and where daily values are not available.",
+   "limitations": "Daily values are noisy (small cell-day counts, overpass timing, cloud). Unusable days are drawn as gaps with red shading and are not interpolated or treated as zero. Axis is symmetric-log above 100."
+  },
+  {
+   "id": "national_seasonal_fai",
+   "kind": "png",
+   "file": "data/visualizations/national/national_seasonal_fai.png",
+   "title": "National activity: seasonal comparison",
+   "sources": [
+    "data/index/fai_seasonal.csv"
+   ],
+   "communicates": "How each meteorological season compares between years in the headline series.",
+   "limitations": "DJF 2023 is not published because its window is incomplete (Dec 2022 is outside the dataset); marked n/a, not zero. Seasons use three years only; 'seasonal' differences are descriptive."
+  },
+  {
+   "id": "spatial_total_heatmap",
+   "kind": "png",
+   "file": "data/visualizations/spatial/spatial_total_heatmap.png",
+   "title": "Geographic distribution: Egypt candidate-activity heatmap",
+   "sources": [
+    "data/analysis/spatial_cells.csv"
+   ],
+   "communicates": "Where VIIRS vegetation-fire candidates were detected most often, on the existing 0.05\u00b0 grid.",
+   "limitations": "Blank cells = no candidate detected in this product, not 'verified no fire'. Counts are raw cell-days on observed days (not coverage-normalised); many top cells lie near static thermal sources (see static overlay figure). Outline is schematic, not survey-grade."
+  },
+  {
+   "id": "spatial_annual_comparison",
+   "kind": "png",
+   "file": "data/visualizations/spatial/spatial_annual_comparison.png",
+   "title": "Geographic distribution: annual comparison 2023 / 2024 / 2025",
+   "sources": [
+    "data/analysis/spatial_cells.csv"
+   ],
+   "communicates": "Whether the spatial pattern of candidate detections persisted across years, on one shared colour scale.",
+   "limitations": "Raw cell-days; years have different numbers of usable days and NOAA-21 only starts in March 2023, so year-to-year differences are not purely activity changes. See national figures for index-normalised values."
+  },
+  {
+   "id": "spatial_active_cell_frequency",
+   "kind": "png",
+   "file": "data/visualizations/spatial/spatial_active_cell_frequency.png",
+   "title": "Geographic distribution: active-cell frequency",
+   "sources": [
+    "data/index/cell_active_day_frequency.csv"
+   ],
+   "communicates": "How often each cell had a candidate detection, as a share of national usable days.",
+   "limitations": "Denominator = national usable days (coverage_basis = record_presence_proxy), not cell-specific observations; high values near static thermal sources may reflect persistent non-vegetation heat."
+  },
+  {
+   "id": "spatial_active_cell_frequency_annual",
+   "kind": "png",
+   "file": "data/visualizations/spatial/spatial_active_cell_frequency_annual.png",
+   "title": "Geographic distribution: annual active-cell frequency",
+   "sources": [
+    "data/index/cell_active_day_frequency.csv"
+   ],
+   "communicates": "Annual maps of the share of usable days with a candidate detection per cell.",
+   "limitations": "Same limitations as the all-years frequency map; zero-frequency cells are left blank."
+  },
+  {
+   "id": "spatial_static_overlay",
+   "kind": "png",
+   "file": "data/visualizations/spatial/spatial_static_overlay.png",
+   "title": "Geographic distribution: candidate activity vs static thermal sources",
+   "sources": [
+    "data/analysis/spatial_cells.csv",
+    "data/analysis/static_source_cells.csv"
+   ],
+   "communicates": "Spatial coincidence between high candidate counts and persistent static thermal sources.",
+   "limitations": "Spatial coincidence is descriptive only and does not establish that candidates are caused by, or are false alarms of, static sources."
+  },
+  {
+   "id": "blocks_map_annual",
+   "kind": "png",
+   "file": "data/visualizations/spatial/blocks_map_annual.png",
+   "title": "1\u00b0 blocks: annual FAI relative to each block's own baseline",
+   "sources": [
+    "data/index/block_fai.csv",
+    "data/index/block_eligibility.csv",
+    "data/analysis/regional_blocks_1deg.csv"
+   ],
+   "communicates": "For each eligible block, whether a year was above or below that block's own 2023-2025 reference (100).",
+   "limitations": "Colours show deviation from each block's own baseline, not activity level; blocks are neither ranked nor comparable in level. Ineligible blocks are hatched, not shown as zero."
+  },
+  {
+   "id": "blocks_small_multiples",
+   "kind": "png",
+   "file": "data/visualizations/spatial/blocks_small_multiples.png",
+   "title": "1\u00b0 blocks: each block against its own baseline (geographic order)",
+   "sources": [
+    "data/index/block_fai.csv"
+   ],
+   "communicates": "Per-block yearly change relative to that block's own frozen reference; panels are in north-to-south, west-to-east order, never sorted by value.",
+   "limitations": "Only eligible blocks are drawn. Dashed line = the block's own baseline (100). Bars of different blocks must not be compared as activity levels."
+  },
+  {
+   "id": "sensors_monthly_indices",
+   "kind": "png",
+   "file": "data/visualizations/sensors/sensors_monthly_indices.png",
+   "title": "Sensor analysis: individual VIIRS sensor indices",
+   "sources": [
+    "data/index/fai_monthly.csv"
+   ],
+   "communicates": "Each sensor is indexed on its own usable days and own baseline; close tracking indicates robustness.",
+   "limitations": "NOAA-21 science starts 2023-03-01 (no value Jan-Feb 2023, a gap not zero). VIIRS sensors observe the same fires; counts from different sensors are never summed as independent events. MODIS has no FAI."
+  },
+  {
+   "id": "sensors_yearly_indices",
+   "kind": "png",
+   "file": "data/visualizations/sensors/sensors_yearly_indices.png",
+   "title": "Sensor analysis: annual single-sensor indices",
+   "sources": [
+    "data/index/fai_yearly.csv"
+   ],
+   "communicates": "Whether the 2023 > 2024 > 2025 pattern is consistent across sensors.",
+   "limitations": "Each sensor uses its own usable days and baseline; differences mix sensor characteristics and day sets."
+  },
+  {
+   "id": "sensors_inter_sensor_spread",
+   "kind": "png",
+   "file": "data/visualizations/sensors/sensors_inter_sensor_spread.png",
+   "title": "Sensor analysis: inter-sensor index spread",
+   "sources": [
+    "data/index/inter_sensor_spread.csv"
+   ],
+   "communicates": "How much the index changes depending on which VIIRS sensor is used.",
+   "limitations": "The spread is the range (max - min) of single-sensor indices computed on their own usable days and baselines. It is a descriptive sensitivity to sensor choice, NOT a confidence interval, standard error or uncertainty estimate."
+  },
+  {
+   "id": "sensors_agreement",
+   "kind": "png",
+   "file": "data/visualizations/sensors/sensors_agreement.png",
+   "title": "Sensor analysis: agreement between sensors",
+   "sources": [
+    "data/analysis/sensor_comparison.csv"
+   ],
+   "communicates": "How closely different sensors flag the same 0.05\u00b0 cells and move together day to day.",
+   "limitations": "MODIS (1 km) and VIIRS (375 m) are kept distinct; MODIS is compared on days when MODIS has records. Low agreement reflects different overpass times and resolution, not which sensor is 'right'. Counts from different sensors are not additive."
+  },
+  {
+   "id": "sensors_monthly_raw_by_sensor",
+   "kind": "png",
+   "file": "data/visualizations/sensors/sensors_monthly_raw_by_sensor.png",
+   "title": "Sensor analysis: monthly candidate cell-days by sensor (separate panels)",
+   "sources": [
+    "data/analysis/monthly_summary.csv"
+   ],
+   "communicates": "Raw monthly 0.05\u00b0 cell-days per sensor family on that sensor's used days, one panel each.",
+   "limitations": "Hatched bars = low-coverage month. Raw cell-days depend on the number of usable days and sensor resolution; panels must not be added up or compared as fire counts."
+  },
+  {
+   "id": "static_core_vs_excl3x3",
+   "kind": "png",
+   "file": "data/visualizations/static_sources/static_core_vs_excl3x3.png",
+   "title": "Static thermal sources: core vs excl3x3 FAI",
+   "sources": [
+    "data/index/static_exposure.csv",
+    "data/index/fai_yearly.csv"
+   ],
+   "communicates": "Whether the temporal pattern survives when cells in or next to static thermal sources are removed.",
+   "limitations": "Static-source exclusion is a SENSITIVITY ANALYSIS, not a correction: each series has its own baseline, removing cells removes real vegetation candidates too, and it does not prove remaining detections are vegetation fires."
+  },
+  {
+   "id": "static_exposure_share",
+   "kind": "png",
+   "file": "data/visualizations/static_sources/static_exposure_share.png",
+   "title": "Static thermal sources: exposure share",
+   "sources": [
+    "data/index/static_exposure.csv"
+   ],
+   "communicates": "How much of detected candidate activity falls in cells in or adjacent to static thermal sources.",
+   "limitations": "R < 1 means a higher static-neighbourhood share than in the reference. This is a diagnostic of exposure, not a correction and not evidence of cause."
+  },
+  {
+   "id": "static_proximity_and_counts",
+   "kind": "png",
+   "file": "data/visualizations/static_sources/static_proximity_and_counts.png",
+   "title": "Static thermal sources: proximity and per-sensor counts",
+   "sources": [
+    "data/analysis/static_proximity_summary.csv",
+    "data/analysis/static_source_yearly.csv"
+   ],
+   "communicates": "A large share of candidate cell-days lies in or next to static-source cells.",
+   "limitations": "Descriptive association only; no causation is claimed. Static cell counts differ by sensor (MODIS vs VIIRS kept separate) and must not be summed across sensors."
+  },
+  {
+   "id": "confidence_all_vs_excl_low",
+   "kind": "png",
+   "file": "data/visualizations/confidence/confidence_all_vs_excl_low.png",
+   "title": "Confidence analysis: all confidence vs excluding low confidence",
+   "sources": [
+    "data/index/confidence_sensitivity.csv"
+   ],
+   "communicates": "Whether the temporal pattern depends on keeping low-confidence VIIRS detections.",
+   "limitations": "Each series has its own baseline, so level differences are small by design. Confidence classes are the sensor's own letter classes (n/h kept); MODIS confidence is not used. This is a sensitivity analysis only."
+  },
+  {
+   "id": "confidence_low_confidence_contribution",
+   "kind": "png",
+   "file": "data/visualizations/confidence/confidence_low_confidence_contribution.png",
+   "title": "Confidence analysis: low-confidence contribution",
+   "sources": [
+    "data/index/confidence_sensitivity.csv",
+    "data/index/low_confidence_share_by_sensor_year.csv"
+   ],
+   "communicates": "How much of the detected activity rests on low-confidence classes, by month and by sensor-year.",
+   "limitations": "Low confidence does not mean false; high confidence does not mean confirmed fire. The share rising over years may reflect processing or environmental differences; no cause is implied."
+  },
+  {
+   "id": "coverage_daily_status",
+   "kind": "png",
+   "file": "data/visualizations/coverage/coverage_daily_status.png",
+   "title": "Data coverage: usable and unusable days (headline series)",
+   "sources": [
+    "data/index/fai_daily.csv"
+   ],
+   "communicates": "Which days entered the headline index; 28 of 1096 days were unusable and excluded.",
+   "limitations": "Unusable days are excluded from the index, never counted as zero activity. Usable-day status is derived from record presence, a proxy for observation coverage."
+  },
+  {
+   "id": "coverage_sensor_month_heatmap",
+   "kind": "png",
+   "file": "data/visualizations/coverage/coverage_sensor_month_heatmap.png",
+   "title": "Data coverage: observed-day share by sensor and month",
+   "sources": [
+    "data/analysis/coverage_analysis.csv"
+   ],
+   "communicates": "Which sensor-months have records on few days (red) and which are almost complete (green).",
+   "limitations": "MODIS has days with no records that cannot be confirmed as zero-detection days (unconfirmed gaps); NOAA-21 is expected only from 2023-03-01. Low share = incomplete observation, not low activity."
+  },
+  {
+   "id": "coverage_gap_runs",
+   "kind": "png",
+   "file": "data/visualizations/coverage/coverage_gap_runs.png",
+   "title": "Data coverage: gap runs by sensor",
+   "sources": [
+    "data/analysis/coverage_gap_runs.csv"
+   ],
+   "communicates": "Each bar is a run of consecutive days without usable records for that sensor.",
+   "limitations": "'No records (unconfirmed)' means the absence could be real quiet or missing data; it is never read as zero activity. Documented source gaps are known outages."
+  },
+  {
+   "id": "coverage_monthly_quality_labels",
+   "kind": "png",
+   "file": "data/visualizations/coverage/coverage_monthly_quality_labels.png",
+   "title": "Data coverage: monthly quality labels",
+   "sources": [
+    "data/index/fai_monthly.csv"
+   ],
+   "communicates": "Quality label and usable-day counts for each month of the headline series.",
+   "limitations": "Labels come from Phase 5 coverage rules (kappa = usable / expected days); partial-coverage months should be interpreted with caution."
+  },
+  {
+   "id": "seasonal_cycle_by_year",
+   "kind": "png",
+   "file": "data/visualizations/seasonal/seasonal_cycle_by_year.png",
+   "title": "Seasonal patterns: month-of-year cycle for each year",
+   "sources": [
+    "data/index/fai_monthly.csv"
+   ],
+   "communicates": "Which months tend to show the highest index and whether the pattern repeats across years.",
+   "limitations": "Three years cannot define a climatology; correlation with season is not causation."
+  },
+  {
+   "id": "patterns_day_vs_night",
+   "kind": "png",
+   "file": "data/visualizations/patterns/patterns_day_vs_night.png",
+   "title": "Daily patterns: day vs night diagnostics",
+   "sources": [
+    "data/index/daynight_diagnostic.csv"
+   ],
+   "communicates": "Whether the 2023-2025 change appears in both daytime and night-time overpasses.",
+   "limitations": "Day/night is the sensor's overpass flag, not a time-of-burning estimate; day and night cells overlap so the union is not the sum. Only yearly diagnostics exist, so no monthly day/night chart is made."
+  },
+  {
+   "id": "patterns_hourly_profile_utc",
+   "kind": "png",
+   "file": "data/visualizations/patterns/patterns_hourly_profile_utc.png",
+   "title": "Daily patterns: hourly profile of detections by sensor",
+   "sources": [
+    "data/analysis/hourly_profile.csv"
+   ],
+   "communicates": "At which hours of the day each sensor's detections occur, separately for candidates and static sources.",
+   "limitations": "Hours are plotted in UTC (the original time reference), derived from the Africa/Cairo local hour and UTC offset (2 or 3) in the source file; add 2-3 h for Cairo local time. Hours reflect satellite overpass times, not when fires burn; sensors are not summed."
+  },
+  {
+   "id": "interactive_spatial_map",
+   "kind": "html",
+   "file": "/home/claude/proj/Nasa_Project/data/visualizations/spatial/interactive_spatial_map.html",
+   "title": "Interactive spatial candidate-activity map",
+   "sources": [
+    "data/analysis/spatial_cells.csv",
+    "data/index/cell_active_day_frequency.csv",
+    "data/analysis/static_source_cells.csv"
+   ],
+   "communicates": "Hover to read per-cell candidate cell-days per year and active-day frequency; toggle static cells.",
+   "limitations": "Same as the static spatial maps; self-contained canvas (no external libraries, plotly not available)."
+  },
+  {
+   "id": "interactive_monthly_fai",
+   "kind": "html",
+   "file": "/home/claude/proj/Nasa_Project/data/visualizations/national/interactive_monthly_fai.html",
+   "title": "Interactive monthly headline FAI",
+   "sources": [
+    "data/index/fai_monthly.csv"
+   ],
+   "communicates": "Hover to read monthly FAI, quality label and usable days.",
+   "limitations": "Hollow markers = partial coverage; gaps for unpublished months; self-contained canvas."
+  }
+ ],
+ "failures": [],
+ "integrity": {
+  "n_files": 49,
+  "unchanged": true,
+  "baseline_unchanged": true,
+  "baseline_sha256": "5a727d60070f87ce7ad7cdaeb884b105cd0e503cafcb7608bf568cef475acd05"
+ },
+ "protected_sha256_before": {
+  "data/analysis/consistency_checks.csv": "c6936571338c27b878085830dd6886f1df7547c21994aaaceaa8a417b46cd66b",
+  "data/analysis/coverage_analysis.csv": "004a8b959eae7222eae38596079eaceb837aab17005a34d37c6bf0cc858ac118",
+  "data/analysis/coverage_gap_runs.csv": "9e0d330318d35ab188a98e454a7a491d799eca1132386ccaac522a52c030c356",
+  "data/analysis/daily_summary.csv": "469428a2664c37316ca1fe10f4dac9d75b4901128f4f9524fd301a9cc1915a98",
+  "data/analysis/hotspot_clusters.csv": "b49e26ef46d03ba241106b9eb92f2d547340152c59449418717f62654edce16e",
+  "data/analysis/hotspot_thresholds.csv": "3fd9e72a0d7f26da4d55c8db9664b84a8d1ee66075655325280789cb63fdb1da",
+  "data/analysis/hourly_profile.csv": "4660983b38bfa90e7f02b95c04390a113eb0483bc19163d1cb7f324f676de30e",
+  "data/analysis/matched_day_yearly.csv": "5844abde9756028b045d743098f30182375468f6476ac6accb038d16b4ecf1da",
+  "data/analysis/modis_vs_viirs_agreement.csv": "0da721010c05442811fe23d6b0b3a66aba3ae8c94aa75659a49ff1a8f7761147",
+  "data/analysis/monthly_pooled.csv": "074604927264bbb0a7a7fc94bbe2649663be4a5c7c1fd30f18525641ed0cf02b",
+  "data/analysis/monthly_summary.csv": "395a03c2372db3e62a125e84c8526837f51dca9376109139a35bf3ad980dbb04",
+  "data/analysis/persistent_activity.csv": "285848c7b3a2da6a22dece9f9535b11939d72d22536bdb0f12f62a83f8cd79aa",
+  "data/analysis/regional_blocks_1deg.csv": "45691d7aa6e949c894e098e177905b4af0fb3eff1fc0257d26413bf67e653961",
+  "data/analysis/run_info.json": "37ce742c68d1d96c228e7ea19aa26ab12398ca8eaa3a3a51c907c9c8f9018e93",
+  "data/analysis/seasonal_pooled.csv": "34a33363b1ed6d34d6d6db5ca98da12a5b5b5f06361ea0734e46d2bae23c7c95",
+  "data/analysis/seasonal_summary.csv": "9965642bf33f0daad724deb39ccec32852245b8e8185bfbb5e0ec96a9ed13864",
+  "data/analysis/sensitivity_matched_day_yearly.csv": "34d55d20699990ffba7222c289ef95b73eb17667088c1735eb4f8c8840b39534",
+  "data/analysis/sensor_comparison.csv": "3ff96d0ab12a9b80c9a0159772f49856b1ea4ca6b01613aa2a7bf88d7b6f52c6",
+  "data/analysis/sensor_day.csv": "3dfacffac4ebde42dce99a6ccc2e7e4ba3e1de8294f9cfefdb8068b3382cb83b",
+  "data/analysis/sensor_pair_cell_day_agreement.csv": "824b47ff5ab33129bda9a3ab85ebaf0294da8a7ca864a1deed6c71b0cc2bdfd7",
+  "data/analysis/sensor_pair_daily_correlation.csv": "17b03368081aa0029416edc0a10ee8273e8e02b7992d3918ddfc7f722260ef2a",
+  "data/analysis/sensor_profile.csv": "9adbfee3e5d27f9006e74a76db30fabaf5106b3d1a4a973f693e857e5ff576f4",
+  "data/analysis/series_daily.csv": "567d5d3d0c9ef2a58d92c957008deb194ca492e5d27a51b0b0744fac72fa1ced",
+  "data/analysis/spatial_cells.csv": "d372ee005a2319f1d41e9b678f61ed5ff9c4bde6c762c26a41a4aef3a656e61c",
+  "data/analysis/spatial_concentration.csv": "630c87067b85baf6a1fb335226cf5ee8b8030ad30f7ddf1c11f148ad4dba9a6f",
+  "data/analysis/static_cell_turnover.csv": "00423b1e1ebeb61208983021d366331802a12c917962278d82bc849bef517c99",
+  "data/analysis/static_influence_metrics.csv": "f41cf99e0eac8dadeaf201a41d9a45416b2c85d89e9128c237f6cdc84db58886",
+  "data/analysis/static_proximity_summary.csv": "b98c1a3319878f466dc445fee42aa7c15e60eba7c8236e936abc67a97a98a7d6",
+  "data/analysis/static_source_cells.csv": "a7866799a611563d0c7935859ab856548c13f6c93f742190083d8b9cc773b585",
+  "data/analysis/static_source_yearly.csv": "b78071c5f8d136a8e73bba33d66f22fdc03d78bac2aff354a6fdcecdab350f48",
+  "data/analysis/yearly_summary.csv": "dac3326ae0e17868bce14de0e708f44803023139914508189e9a829f2eef01e1",
+  "data/index/baseline_v1.json": "5a727d60070f87ce7ad7cdaeb884b105cd0e503cafcb7608bf568cef475acd05",
+  "data/index/baseline_validation.csv": "0c78e39928d496eceba1b5f9d4825db241a0ead3389e698ab559c4f56b3c7446",
+  "data/index/block_eligibility.csv": "493d79d573d3c982d18188cc8b091a067390014d049fe00deb8629427df34f60",
+  "data/index/block_fai.csv": "19378b6c0831e8ff9936a5d031ec1c0e8233ef8c80bfd3fadc86fd85dd5deda7",
+  "data/index/cell_active_day_frequency.csv": "938ef0233ac7326100d60f2f922302f56a57451ca733f93c296716ddf417660c",
+  "data/index/confidence_sensitivity.csv": "4693ed0b4cfa06515ef34142432b068f8da31d15f6d861446c939d723bd4e5ad",
+  "data/index/daynight_diagnostic.csv": "34cc0a37d84fd7b7063b09cf5f19cd88b87b9d2937ff7b1ea7ecce6723e82dc0",
+  "data/index/fai_daily.csv": "cf10160632b99731ba2a52c46a3850180da44a205966c2a1f7a45391e3869c66",
+  "data/index/fai_monthly.csv": "4305d301d62f91ce89af3f36726da6fc82a622425863c6f430f64361d34d94aa",
+  "data/index/fai_seasonal.csv": "36973fece6026bc0527ad281c27b92603482a93c9e1663c60d3a2b65921e2dbf",
+  "data/index/fai_yearly.csv": "9435c3161277c4d7bb2cf2cb914448fc6fe0c8f16d5d74e837d06c0bdc4379c3",
+  "data/index/inter_sensor_spread.csv": "1ca1c2aeefc07fd1e9999f21dea7a30061c0ce5b2b266282b9376223d9900392",
+  "data/index/low_confidence_share_by_sensor_year.csv": "fdeb860af16e40e412c03e2d1eb29f113d73313d4321ace456c15f6dc00d3f35",
+  "data/index/phase5_checks.csv": "51f1cdb56629c8540e1b541fd8c23288a1c03a430f6cfa58616b9ac5b9e2cc48",
+  "data/index/run_info.json": "ac19ab7332f539e82e9becee1bd5e1f114e880e9b43d32ccd3c6e24ed0693e06",
+  "data/index/series_catalog.csv": "07d8b06e85cf232bdaea387a09554e69ffe9d9d06c3b26a2c41c38b04b93d79d",
+  "data/index/static_exposure.csv": "0446cfe10e476c808740343abc86e03cc93b09bee9d048c468b46ec6029747ec",
+  "data/index/static_probe_diagnostic.csv": "a76eb9a50513bf850385f2c0ea4964ab2658da6d506a629de672a2710899789c"
+ },
+ "seconds": 14.4
+}

@@ -1,16 +1,28 @@
-import { Satellite, Users, Database, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Satellite, Database, ShieldCheck, Server, ArrowRight } from 'lucide-react';
 import { PLACEHOLDERS } from '../config/placeholders';
-import { Badge } from '../components/ui/Badge';
-import { Card } from '../components/ui/Card';
+import { Badge, Button, Card } from '../components/ui';
 
 export function AboutPage() {
+  const navigate = useNavigate();
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* 1. Mission & Brand Showcase */}
       <Card
         heroBorder
         title={`About ${PLACEHOLDERS.PROJECT_NAME}`}
-        subtitle="NASA Space Apps Challenge 2026 — Harmonization of MODIS and VIIRS Hot Spots"
+        subtitle="FireScope — Analysis of Thermal Anomaly & Hotspot Activity in Egypt (2023–2025) from NASA FIRMS MODIS & VIIRS"
+        action={
+          <Button
+            size="sm"
+            variant="primary"
+            icon={<ArrowRight size={14} />}
+            onClick={() => navigate('/atlas')}
+          >
+            Explore Phase 6 Atlas
+          </Button>
+        }
       >
         <div
           style={{
@@ -33,59 +45,18 @@ export function AboutPage() {
           />
           <div style={{ flex: '1 1 420px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <Badge tone="modis">MODIS Terra &amp; Aqua (~1 km)</Badge>
-              <Badge tone="viirs">VIIRS Suomi-NPP &amp; NOAA-20/21 (~375 m)</Badge>
-              <Badge tone="neutral">Team: Four-Bits-and-a-Byte</Badge>
+              <Badge tone="modis">MODIS Terra &amp; Aqua (~1,000 m)</Badge>
+              <Badge tone="viirs">VIIRS S-NPP, NOAA-20 &amp; NOAA-21 (~375 m)</Badge>
+              <Badge tone="neutral">Egypt 2023–2025 · 254,175 Rows</Badge>
             </div>
             <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-primary)', lineHeight: 1.55 }}>
-              Active-fire hotspot records from NASA&apos;s MODIS and VIIRS instruments provide complementary views of global wildfire activity, but differ in spatial footprint (1 km vs. 375 m), confidence reporting (0–100% vs. categorical classes), and diurnal overpass timing.{' '}
-              <strong>{PLACEHOLDERS.PROJECT_NAME}</strong> bridges these two orbital records into a unified fire-activity calendar and mission-control workstation for emergency responders, Earth scientists, and land managers.
+              <strong>{PLACEHOLDERS.PROJECT_NAME} (FireScope)</strong> unifies 254,175 archival NASA FIRMS detections across Egypt (2023–2025) from four orbital instruments—MODIS (Terra/Aqua) and VIIRS (Suomi-NPP, NOAA-20, NOAA-21)—onto a common <strong>0.05° × 0.05° (~5 km) spatial grid</strong> and a <strong>1,096-day coverage calendar</strong>. It separates 84,689 Type 0 vegetation fire candidates from 168,263 Type 2 persistent industrial/gas-flare detections and computes the coverage-normalized <strong>Fire Activity Index (FAI)</strong> anchored to Frozen Baseline v1 (<em>B</em> = 32.4975 cell-days/day).
             </p>
           </div>
         </div>
       </Card>
 
-      {/* 2. Team Roster (TEAM_NAMES) */}
-      <Card
-        title="Team Four-Bits-and-a-Byte"
-        subtitle="Multidisciplinary engineering, Earth observation, and data visualization team"
-        action={<Users size={16} color="#7E9DFF" />}
-      >
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '12px',
-          }}
-        >
-          {PLACEHOLDERS.TEAM_NAMES.map((member) => (
-            <div
-              key={member.name}
-              style={{
-                backgroundColor: 'rgba(11, 18, 32, 0.72)',
-                border: '1px solid var(--border-line)',
-                borderRadius: 'var(--radius-md)',
-                padding: '12px 14px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px',
-              }}
-            >
-              <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--text-bright)' }}>
-                {member.name}
-              </div>
-              <div style={{ fontSize: 'var(--text-xs)', color: '#7E9DFF', fontWeight: 500 }}>
-                {member.role}
-              </div>
-              <p style={{ margin: '4px 0 0', fontSize: 'var(--text-xs)', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                {member.focus}
-              </p>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* 3. Sensor Specifications & Data Credits */}
+      {/* 2. Sensor Specifications & Data Credits */}
       <div
         style={{
           display: 'grid',
@@ -95,7 +66,7 @@ export function AboutPage() {
       >
         <Card
           title="Orbital instrument comparison (MODIS vs VIIRS)"
-          subtitle="Primary radiometric & orbital characteristics"
+          subtitle="Empirical performance across Egypt (2023–2025)"
           action={<Satellite size={16} color="#3CC4C4" />}
         >
           <div style={{ overflowX: 'auto' }}>
@@ -114,7 +85,7 @@ export function AboutPage() {
                     MODIS (C6.1)
                   </th>
                   <th style={{ textAlign: 'left', padding: '7px 8px', color: 'var(--sensor-viirs)' }}>
-                    VIIRS (375 m)
+                    VIIRS (S-NPP, NOAA-20/21)
                   </th>
                 </tr>
               </thead>
@@ -122,7 +93,7 @@ export function AboutPage() {
                 <tr style={{ borderBottom: '1px solid rgba(38, 52, 77, 0.45)' }}>
                   <td style={{ padding: '7px 8px', color: 'var(--text-muted)' }}>Spacecraft</td>
                   <td style={{ padding: '7px 8px' }}>Terra (1999), Aqua (2002)</td>
-                  <td style={{ padding: '7px 8px' }}>Suomi-NPP (2011), NOAA-20/21</td>
+                  <td style={{ padding: '7px 8px' }}>S-NPP, NOAA-20, NOAA-21 (from 2023-03-01)</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(38, 52, 77, 0.45)' }}>
                   <td style={{ padding: '7px 8px', color: 'var(--text-muted)' }}>Nadir resolution</td>
@@ -130,14 +101,19 @@ export function AboutPage() {
                   <td style={{ padding: '7px 8px' }}>~375 m × 375 m (I-bands)</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(38, 52, 77, 0.45)' }}>
+                  <td style={{ padding: '7px 8px', color: 'var(--text-muted)' }}>Egypt 2023–25 rows</td>
+                  <td style={{ padding: '7px 8px' }}>4,127 (3,457 Veg · 665 Static)</td>
+                  <td style={{ padding: '7px 8px' }}>250,048 (81,232 Veg · 167,598 Static)</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid rgba(38, 52, 77, 0.45)' }}>
                   <td style={{ padding: '7px 8px', color: 'var(--text-muted)' }}>Confidence scale</td>
-                  <td style={{ padding: '7px 8px' }}>0% to 100% numeric</td>
-                  <td style={{ padding: '7px 8px' }}>Low (&quot;l&quot;), Nominal (&quot;n&quot;), High (&quot;h&quot;)</td>
+                  <td style={{ padding: '7px 8px' }}>0% to 100% numeric (mean 67.7%)</td>
+                  <td style={{ padding: '7px 8px' }}>Low (&quot;l&quot; ~13%), Nominal (&quot;n&quot; ~84%), High (&quot;h&quot; ~3%)</td>
                 </tr>
                 <tr>
-                  <td style={{ padding: '7px 8px', color: 'var(--text-muted)' }}>Local equator crossing</td>
-                  <td style={{ padding: '7px 8px' }}>10:30 / 22:30 &amp; 13:30 / 01:30</td>
-                  <td style={{ padding: '7px 8px' }}>~13:30 daytime / ~01:30 nighttime</td>
+                  <td style={{ padding: '7px 8px', color: 'var(--text-muted)' }}>Cairo overpass peaks</td>
+                  <td style={{ padding: '7px 8px' }}>10:00–14:00 &amp; 22:00–02:00 LT</td>
+                  <td style={{ padding: '7px 8px' }}>12:00–14:00 daytime / 01:00–02:00 nighttime</td>
                 </tr>
               </tbody>
             </table>
@@ -145,21 +121,39 @@ export function AboutPage() {
         </Card>
 
         <Card
-          title="Data sources, credits & project boundaries"
+          title="Full-Stack Pipeline & Backend Architecture"
+          subtitle="Integrated 6-phase Python pipeline (backend/) + React/MapLibre mission control"
+          action={<Server size={16} color="#FFC247" />}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+            <div>
+              <strong style={{ color: 'var(--text-bright)' }}>Python Pipeline (`backend/src/`):</strong> End-to-end deterministic modules for Phase 1 Audit, Phase 2 Cleaning (`data_cleaning.py`), Phase 3 Harmonization (`harmonize.py`), Phase 4 Analysis (`phase4_analysis.py`), Phase 5 FAI Index (`phase5_index.py`), and Phase 6 Visualization (`phase6_visualization.py`).
+            </div>
+            <div>
+              <strong style={{ color: 'var(--text-bright)' }}>Backend REST API (`backend/api_server.py`):</strong> Serves `/api/firescope/health`, `/api/firescope/bundle`, `/api/firescope/baseline`, and `/api/firescope/table/:stage/:name` directly from `backend/data/`.
+            </div>
+            <div>
+              <strong style={{ color: 'var(--text-bright)' }}>Frontend Data Bridge (`scripts/build_firescope_frontend_data.mjs`):</strong> Compiles all 49 analytical & index CSV/JSON tables and 28 Phase 6 figures into Zod-validated frontend contracts.
+            </div>
+          </div>
+        </Card>
+
+        <Card
+          title="Data sources, credits & scientific reading rules"
           subtitle="Attribution and responsible operational usage"
           action={<Database size={16} color="#B79CFF" />}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
             <div>
-              <strong style={{ color: 'var(--text-bright)' }}>NASA FIRMS &amp; LANCE:</strong> Active-fire hotspot architecture designed for NASA Fire Information for Resource Management System (FIRMS), Land, Atmosphere Near real-time Capability for EOS (LANCE).
+              <strong style={{ color: 'var(--text-bright)' }}>NASA FIRMS &amp; LANCE:</strong> Archival thermal anomaly data for Egypt (2023–2025) from NASA Fire Information for Resource Management System (MODIS C6.1 &amp; VIIRS 375 m S-NPP, NOAA-20, NOAA-21).
             </div>
             <div>
-              <strong style={{ color: 'var(--text-bright)' }}>Basemap &amp; WebGL Engine:</strong> Map rendered with MapLibre GL JS and CARTO Dark Matter vector tiles (© OpenStreetMap contributors, © CARTO).
+              <strong style={{ color: 'var(--text-bright)' }}>Basemap &amp; WebGL Engine:</strong> Map rendered with MapLibre GL JS and CARTO Dark Matter vector tiles (© OpenStreetMap contributors, © CARTO) plus Folium/Leaflet HTML layers.
             </div>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', color: '#FFC247' }}>
               <ShieldCheck size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
               <span>
-                <strong>Operational disclaimer:</strong> When the &quot;Demo data&quot; badge is active in the top bar, all displayed counts, FRP totals, and anomalies are generated from our deterministic seeded simulation (`VITE_USE_MOCK=true`) to validate the data contract before ingesting full FIRMS archives.
+                <strong>Scientific reading rule:</strong> Raw detections across MODIS and VIIRS are never summed as independent fires. All headline trends use 0.05° × 0.05° cell-day presence normalized by usable sensor coverage days (<em>kappa</em>).
               </span>
             </div>
           </div>

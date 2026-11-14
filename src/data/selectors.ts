@@ -39,7 +39,15 @@ export function selectFilteredDailySummary(
       .sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  // Global composite ('all'): aggregate by date
+  // If dataset already provides explicit national/global 'all' rows, return them directly
+  const explicitAllRows = dataset.dailySummary.filter(
+    (r) => r.region_id === 'all' && r.date >= minDate && r.date <= maxDate,
+  );
+  if (explicitAllRows.length > 0) {
+    return explicitAllRows.sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  // Fallback for datasets without explicit 'all' rows: aggregate across sub-regions by date
   const byDate = new Map<
     string,
     {

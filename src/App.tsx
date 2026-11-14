@@ -14,9 +14,8 @@ import {
 import { useFireData } from './hooks/useFireData';
 import { useFilterStore } from './store/useFilterStore';
 
-const OverviewPage = lazy(() =>
-  import('./pages/OverviewPage').then((m) => ({ default: m.OverviewPage })),
-);
+import { OverviewPage } from './pages/OverviewPage';
+
 const ExplorePage = lazy(() =>
   import('./pages/ExplorePage').then((m) => ({ default: m.ExplorePage })),
 );
@@ -25,6 +24,9 @@ const PatternsPage = lazy(() =>
 );
 const MethodPage = lazy(() =>
   import('./pages/MethodPage').then((m) => ({ default: m.MethodPage })),
+);
+const AtlasPage = lazy(() =>
+  import('./pages/AtlasPage').then((m) => ({ default: m.AtlasPage })),
 );
 const AboutPage = lazy(() =>
   import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })),
@@ -163,6 +165,7 @@ function WorkspaceRoutes() {
             />
           }
         />
+        <Route path="/atlas" element={<AtlasPage />} />
         <Route path="/about" element={<AboutPage />} />
       </Routes>
     </Suspense>

@@ -1,0 +1,8 @@
+series_id,role,sensors,mask,confidence_rule,n_matched_days,baseline_total_cell_days,baseline_B,matched_total_2023,matched_total_2024,matched_total_2025,baseline_version,coverage_basis
+headline_N20_SNPP_core_all,headline,NOAA20+SNPP,core,all,337,32855.0,32.497527200791296,13940.0,10862.0,8053.0,v1,record_presence_proxy
+N20_SNPP_excl3x3_all,static_sensitivity,NOAA20+SNPP,excl3x3,all,337,21409.0,21.176063303659742,9202.0,6994.0,5213.0,v1,record_presence_proxy
+N20_SNPP_core_excl_low,confidence_sensitivity,NOAA20+SNPP,core,excl_low,337,30304.0,29.974282888229475,13002.0,9899.0,7403.0,v1,record_presence_proxy
+V3_core_all,robustness_3sensor_union,NOAA20+NOAA21+SNPP,core,all,279,38115.0,45.53763440860215,16143.0,12375.0,9597.0,v1,record_presence_proxy
+NOAA20_core_all,single_sensor,NOAA20,core,all,358,20713.0,19.28584729981378,8722.0,6749.0,5242.0,v1,record_presence_proxy
+NOAA21_core_all,single_sensor,NOAA21,core,all,306,16256.0,17.70806100217865,6989.0,4992.0,4275.0,v1,record_presence_proxy
+SNPP_core_all,single_sensor,SNPP,core,all,344,18621.0,18.04360465116279,7784.0,6244.0,4593.0,v1,record_presence_proxy

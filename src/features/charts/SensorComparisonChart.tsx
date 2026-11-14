@@ -112,11 +112,21 @@ export function SensorComparisonChart({
           />
           <RechartsTooltip
             contentStyle={{
-              backgroundColor: '#0B1220',
-              border: '1px solid #3B5178',
+              backgroundColor: 'rgba(11, 18, 32, 0.96)',
+              border: '1px solid rgba(255, 194, 71, 0.45)',
               borderRadius: '8px',
               color: '#E6ECF5',
               fontSize: '12px',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.65)',
+            }}
+            itemStyle={{
+              color: '#E6ECF5',
+              fontWeight: 500,
+            }}
+            labelStyle={{
+              color: '#FFF1B8',
+              fontWeight: 600,
+              marginBottom: '4px',
             }}
           />
           <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '4px' }} />

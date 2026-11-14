@@ -1,0 +1,3 @@
+sensor_key,observed_days,n_static_cells_detected,n_probes_ge_50pct_days,n_probes_ge_80pct_days,mean_share_probes_seen_per_day,days_share_below_0.5,use
+NOAA20,1089,132,23,8,0.7189284145805885,123,diagnostic only; not part of the index
+SNPP,1075,129,20,7,0.7262790697674418,95,diagnostic only; not part of the index

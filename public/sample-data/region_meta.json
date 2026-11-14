@@ -1,72 +1,72 @@
 [
   {
     "region_id": "all",
-    "name": "All monitored regions (Global composite)",
+    "name": "All Egypt (National Composite 22°N–32°N)",
     "bbox": [
-      -130,
-      -25,
-      45,
-      52
+      24.7,
+      22,
+      36.3,
+      31.8
     ],
-    "date_min": "2021-01-01",
+    "date_min": "2023-01-01",
     "date_max": "2025-12-31",
-    "biome": "Multi-biome global harmonization benchmark",
-    "description": "Combined active-fire series across Mediterranean, Amazonia, Western North America, and Sudano-Sahelian benchmark regions."
+    "biome": "Nile Delta & Valley irrigated croplands + desert/coastal industrial basins",
+    "description": "Complete Egypt national active-fire & thermal anomaly domain (254,175 harmonized rows across MODIS, S-NPP, NOAA-20, and NOAA-21 on a 0.05° × 0.05° grid)."
   },
   {
-    "region_id": "med-east",
-    "name": "Eastern Mediterranean & Levant",
+    "region_id": "nile-delta",
+    "name": "Nile Delta & Greater Cairo (B30N_30E–B31N_31E)",
     "bbox": [
-      19.5,
-      31,
-      37.5,
-      41.5
+      29.8,
+      29.8,
+      32.2,
+      31.7
     ],
-    "date_min": "2021-01-01",
+    "date_min": "2023-01-01",
     "date_max": "2025-12-31",
-    "biome": "Mediterranean sclerophyllous forests & shrublands",
-    "description": "High summer desiccation regime driven by Etesian winds and marine heatwaves across Greece, Anatolia, Cyprus, and the Levant coast."
+    "biome": "Intensive irrigated deltaic cropland (rice, wheat, maize)",
+    "description": "Primary national agricultural fire concentration zone led by B30N_31E (7,926 cell-days), B31N_31E (4,101 cell-days), and B30N_30E (3,190 cell-days), peaking sharply in September–October."
   },
   {
-    "region_id": "amazon-south",
-    "name": "Southern Amazonia Arc",
+    "region_id": "nile-valley",
+    "name": "Middle & Upper Egypt Nile Valley (B24N–B29N)",
     "bbox": [
-      -67,
-      -15.5,
-      -48,
-      -4
+      29.6,
+      22,
+      33.1,
+      29.85
     ],
-    "date_min": "2021-01-01",
+    "date_min": "2023-01-01",
     "date_max": "2025-12-31",
-    "biome": "Moist tropical broadleaf forest & agricultural frontier",
-    "description": "Pronounced dry-season biomass burning corridor along the BR-163 and Trans-Amazonian frontier peaking August through October."
+    "biome": "Alluvial Nile corridor floodplain (sugarcane & winter wheat)",
+    "description": "Linear agricultural corridor from Beni Suef and Minya (B28N_30E) through Assiut and Qena/Luxor (B25N_32E: 1,705 cell-days) to Aswan, with pronounced spring (MAM) harvest activity."
   },
   {
-    "region_id": "west-na",
-    "name": "Western North America",
+    "region_id": "western-coast",
+    "name": "NW Coast, Alexandria West & Western Desert (B29N–B31N)",
     "bbox": [
-      -124.8,
-      32.5,
-      -110,
-      49
+      24.7,
+      22,
+      29.95,
+      31.6
     ],
-    "date_min": "2021-01-01",
+    "date_min": "2023-01-01",
     "date_max": "2025-12-31",
-    "biome": "Temperate coniferous forest & chaparral",
-    "description": "High-FRP crown fire regime across the Sierra Nevada, Cascades, and Northern Rockies with late-summer vapor pressure deficit spikes."
+    "biome": "Coastal Mediterranean steppe, hydrocarbon basins & desert oases",
+    "description": "Encompasses West Alexandria industrial zone (B31N_29E), Matrouh/Western Desert basins (B30N_27E: 2,380 cell-days; B29N_27E: 1,833 cell-days), and Western oases."
   },
   {
-    "region_id": "congo-basin",
-    "name": "Northern Congo & Sudano-Sahelian Belt",
+    "region_id": "red-sea-sinai",
+    "name": "Suez Gulf, Sinai & Red Sea Coast (B24N_33E–B31N_32E)",
     "bbox": [
-      14,
-      2,
-      31,
-      11.5
+      32,
+      22,
+      36.3,
+      31.5
     ],
-    "date_min": "2021-01-01",
+    "date_min": "2023-01-01",
     "date_max": "2025-12-31",
-    "biome": "Tropical savanna & forest-savanna mosaic",
-    "description": "Boreal winter dry-season savanna fire belt (December–February) characterized by high VIIRS low-FRP perimeter detections."
+    "biome": "Eastern Canal zone, Suez Gulf petrochemical corridor & Sinai",
+    "description": "Covers Port Said/Ismailia/Suez (B30N_32E: 1,978 cell-days; B29N_32E: 1,929 cell-days) and Red Sea coastal blocks with high persistent static thermal source density."
   }
 ]

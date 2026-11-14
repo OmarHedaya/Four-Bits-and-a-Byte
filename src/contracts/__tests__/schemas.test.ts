@@ -16,7 +16,7 @@ describe('Data Contract Schemas & Seeded Mock Generator (F0)', () => {
   const dataset = generateMockDataset(202610);
 
   it('produces deterministic multi-year, multi-region daily summaries', () => {
-    expect(dataset.dailySummary.length).toBeGreaterThan(7000); // 4 regions x 5 years (~7,304 rows)
+    expect(dataset.dailySummary.length).toBeGreaterThan(5000); // 5 Egypt regions x 3 years (5,480 rows)
     const sample = dataset.dailySummary[0];
     const parsed = DailySummaryRecordSchema.safeParse(sample);
     expect(parsed.success).toBe(true);

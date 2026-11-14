@@ -106,7 +106,7 @@ export function OverviewPage({
               <div style={{ marginBottom: '6px' }}>
                 <span className="orbital-pill">
                   <Satellite size={13} />
-                  Next-generation satellite fire harmonization · NASA Space Apps 2026
+                  FireScope Egypt (2023–2025) · MODIS &amp; VIIRS (S-NPP, NOAA-20, NOAA-21)
                 </span>
               </div>
               <h1
@@ -120,20 +120,20 @@ export function OverviewPage({
                   textShadow: '0 2px 14px rgba(0, 0, 0, 0.75)',
                 }}
               >
-                Monitoring global fire activity{' '}
-                <span className="orbital-headline-accent">from orbital sensors</span>
+                Egypt Thermal Anomaly &amp;{' '}
+                <span className="orbital-headline-accent">Fire Activity Index (FAI)</span>
               </h1>
               <p
                 style={{
                   margin: '5px 0 0',
                   fontSize: 'var(--text-sm)',
                   color: '#D5DFEE',
-                  maxWidth: '720px',
+                  maxWidth: '760px',
                   textShadow: '0 1px 8px rgba(0, 0, 0, 0.8)',
                 }}
               >
                 Active scope: <strong style={{ color: '#FFF1B8' }}>{activeRegionName}</strong> ({yearRange[0]}–{yearRange[1]}) ·{' '}
-                {dailyRecords.length.toLocaleString()} harmonized daily records
+                {dailyRecords.length.toLocaleString()} calendar days · 254,175 harmonized FIRMS rows on a 0.05° × 0.05° grid
               </p>
             </div>
           </div>
@@ -145,7 +145,14 @@ export function OverviewPage({
               icon={<ArrowRight size={14} />}
               onClick={() => navigate('/explore')}
             >
-              Open full-screen map
+              Open Egypt 0.05° map
+            </Button>
+            <Button
+              variant="thermal"
+              size="sm"
+              onClick={() => navigate('/atlas')}
+            >
+              Phase 6 Atlas (28 figures)
             </Button>
             <Button
               variant="secondary"
@@ -154,6 +161,95 @@ export function OverviewPage({
             >
               Method &amp; validation
             </Button>
+          </div>
+        </div>
+
+        {/* Phase 5 Headline Fire Activity Index (FAI) Trajectory Bar */}
+        <div
+          className="tabular-nums"
+          style={{
+            marginTop: '14px',
+            paddingTop: '12px',
+            borderTop: '1px solid rgba(255, 214, 138, 0.18)',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(195px, 1fr))',
+            gap: '10px',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'rgba(8, 13, 24, 0.65)',
+              border: '1px solid rgba(255, 194, 71, 0.32)',
+              borderRadius: '8px',
+              padding: '8px 12px',
+            }}
+          >
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              Frozen Baseline v1 (NOAA-20 ∪ S-NPP)
+            </div>
+            <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: '#FFF1B8', marginTop: '2px' }}>
+              B = 32.50 cell-days/day
+            </div>
+            <div style={{ fontSize: '11px', color: '#8FA0BA' }}>
+              337 matched dates (1,011 usable days)
+            </div>
+          </div>
+
+          <div
+            style={{
+              backgroundColor: 'rgba(8, 13, 24, 0.65)',
+              border: '1px solid rgba(242, 107, 45, 0.38)',
+              borderRadius: '8px',
+              padding: '8px 12px',
+            }}
+          >
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              2023 Headline FAI (359 usable days)
+            </div>
+            <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: '#F26B2D', marginTop: '2px' }}>
+              FAI 126.0 · 14,699 cell-days
+            </div>
+            <div style={{ fontSize: '11px', color: '#8FA0BA' }}>
+              Peak month: Oct 2023 (FAI = 325.9)
+            </div>
+          </div>
+
+          <div
+            style={{
+              backgroundColor: 'rgba(8, 13, 24, 0.65)',
+              border: '1px solid rgba(183, 156, 255, 0.35)',
+              borderRadius: '8px',
+              padding: '8px 12px',
+            }}
+          >
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              2024 Headline FAI (346 usable days)
+            </div>
+            <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: '#B79CFF', marginTop: '2px' }}>
+              FAI 98.7 · 11,099 cell-days
+            </div>
+            <div style={{ fontSize: '11px', color: '#8FA0BA' }}>
+              -23.3% vs 2023 · Oct 2024 FAI = 204.1
+            </div>
+          </div>
+
+          <div
+            style={{
+              backgroundColor: 'rgba(8, 13, 24, 0.65)',
+              border: '1px solid rgba(60, 196, 196, 0.38)',
+              borderRadius: '8px',
+              padding: '8px 12px',
+            }}
+          >
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              2025 Headline FAI (363 usable days)
+            </div>
+            <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: '#3CC4C4', marginTop: '2px' }}>
+              FAI 73.5 · 8,665 cell-days
+            </div>
+            <div style={{ fontSize: '11px', color: '#4ADE80' }}>
+              -40.6% vs 2023 (excl3x3: -43.3%)
+            </div>
           </div>
         </div>
       </section>
@@ -168,23 +264,21 @@ export function OverviewPage({
       <div className="overview-grid">
         {/* 1. Hero Area: Unified Fire-Activity Calendar Heatmap */}
         <div className="overview-area-cal">
-          <Card
-            heroBorder
-            title="Unified fire-activity calendar (Hero)"
-            subtitle={`${activeRegionName} · ${yearRange[0]}–${yearRange[1]} · Click any day cell to filter the spatial map & time-series`}
-            action={
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <Tooltip content="MODIS Terra/Aqua ~1 km nominal resolution">
-                  <Badge tone="modis">MODIS #3CC4C4</Badge>
-                </Tooltip>
-                <Tooltip content="VIIRS S-NPP/NOAA-20 ~375 m nominal resolution">
-                  <Badge tone="viirs">VIIRS #B79CFF</Badge>
-                </Tooltip>
-                <Badge tone="neutral">Mode: {audienceMode}</Badge>
-              </div>
-            }
-          >
+          <Card heroBorder noPadding>
             <CalendarHeatmap
+              headerTitle="Unified fire-activity calendar"
+              headerSubtitle={`${activeRegionName} · ${yearRange[0]}–${yearRange[1]} · Click any day cell to filter the spatial map & time-series`}
+              headerAction={
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <Tooltip content="MODIS Terra/Aqua ~1 km nominal resolution">
+                    <Badge tone="modis">MODIS #3CC4C4</Badge>
+                  </Tooltip>
+                  <Tooltip content="VIIRS S-NPP/NOAA-20 ~375 m nominal resolution">
+                    <Badge tone="viirs">VIIRS #B79CFF</Badge>
+                  </Tooltip>
+                  <Badge tone="neutral">Mode: {audienceMode}</Badge>
+                </div>
+              }
               records={dailyRecords}
               sensor={sensor}
               metric={metric}

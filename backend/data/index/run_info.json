@@ -1,0 +1,43 @@
+{
+  "baseline_version": "v1",
+  "baseline_created_utc": "2026-11-13T21:14:18Z",
+  "baseline_input_fingerprint": {
+    "coverage_baseline_years_rows": 4384,
+    "coverage_baseline_years_sha256": "846c3e0b59acb24a25a270999c9d141da8ba0d6a04eef1d9d15bab6c2600631b",
+    "harmonized_baseline_years_rows": 254175,
+    "harmonized_baseline_years_sha256": "960fad3ab436682518c6dca2fc42d004a512e1ad418f58217d431b19c985e9a2"
+  },
+  "input_file_sha256_at_freeze": {
+    "coverage_calendar.csv": "fa4f46eb6b3b2052e87353ee6ab6b183b02d12c998786fd0ef52d730e4a996c9",
+    "firescope_harmonized.csv": "dd2cc139542c9b3a715893e188902ad5403c7f7cc14d65d1b3d56006c86bbc82"
+  },
+  "input_file_sha256_now": {
+    "firescope_harmonized.csv": "dd2cc139542c9b3a715893e188902ad5403c7f7cc14d65d1b3d56006c86bbc82",
+    "coverage_calendar.csv": "fa4f46eb6b3b2052e87353ee6ab6b183b02d12c998786fd0ef52d730e4a996c9"
+  },
+  "input_rows": 254175,
+  "tables": {
+    "series_catalog": 7,
+    "fai_daily": 7672,
+    "fai_monthly": 252,
+    "fai_seasonal": 91,
+    "fai_yearly": 21,
+    "static_exposure": 52,
+    "confidence_sensitivity": 52,
+    "inter_sensor_spread": 52,
+    "block_fai": 624,
+    "block_eligibility": 81,
+    "cell_active_day_frequency": 3352,
+    "baseline_validation": 21,
+    "low_confidence_share_by_sensor_year": 9,
+    "daynight_diagnostic": 3,
+    "static_probe_diagnostic": 2
+  },
+  "checks_passed": 53,
+  "checks_total": 53,
+  "execution_seconds": 5.25,
+  "not_implemented": [
+    "day-resampling interval (optional, off by default, assumptions not demonstrated)",
+    "same-cell-only and persistent-cell exclusions (optional)"
+  ]
+}

@@ -1,0 +1,5 @@
+scope,threshold_days,n_active_cells,n_persistent_cells,persistent_share_of_cell_days,n_persistent_with_static_same_cell,n_persistent_static_in_3x3,max_days_in_a_cell
+2023,91,2652,15,0.10934922577555473,14,14,240
+2024,91,2686,7,0.07838322161014137,7,7,290
+2025,91,2475,3,0.03783553472518108,2,2,182
+any_year,91,3596,21,0.09678692839127097,19,19,444

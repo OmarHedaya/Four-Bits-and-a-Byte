@@ -1,72 +1,50 @@
 [
   {
-    "window": "July 20 – August 31 (Peak Etesian Window)",
-    "region_id": "med-east",
-    "risk_score": 94,
+    "window": "September 01 – November 15 (Autumn SON Nile Delta Residue Burning Peak)",
+    "region_id": "nile-delta",
+    "risk_score": 96,
     "drivers": [
-      "Persistent Etesian NE winds (25–45 kt)",
-      "10-hour dead fuel moisture < 6%",
-      "Marine heatwave suppressing nocturnal humidity recovery"
+      "Post-harvest rice & summer crop residue burning across B30N_31E (7,926 cell-days) and B31N_31E (4,101 cell-days)",
+      "Accounts for the primary national FAI peak every year (Oct 2023 FAI = 325.9, Oct 2024 FAI = 204.1, Oct 2025 FAI = 148.0)",
+      "Low static-source neighborhood overlap (sigma_P = 17.6–18.8%) confirms open vegetation combustion"
     ],
-    "start_month": 7,
-    "end_month": 8
-  },
-  {
-    "window": "August 15 – October 10 (Dry-Season Clearing Peak)",
-    "region_id": "amazon-south",
-    "risk_score": 91,
-    "drivers": [
-      "Cumulative dry-season rainfall deficit (>180 mm anomaly)",
-      "Slash-and-burn agricultural frontier ignitions",
-      "Canopy desiccation enabling understory fire escape"
-    ],
-    "start_month": 8,
-    "end_month": 10
-  },
-  {
-    "window": "August 01 – September 25 (Late-Summer VPD Surge)",
-    "region_id": "west-na",
-    "risk_score": 89,
-    "drivers": [
-      "Extreme Vapor Pressure Deficit (VPD > 4.5 kPa)",
-      "Dry thunderstorm lightning outbreaks over cured timber",
-      "Early autumn offshore downslope wind transitions"
-    ],
-    "start_month": 8,
-    "end_month": 9
-  },
-  {
-    "window": "December 20 – February 10 (Harmattan Savanna Window)",
-    "region_id": "congo-basin",
-    "risk_score": 82,
-    "drivers": [
-      "Harmattan dry continental airflow from the Sahara",
-      "Cured C4 tall-grass biomass continuity",
-      "High diurnal spread rate between 11:00 and 16:00 LT"
-    ],
-    "start_month": 12,
-    "end_month": 2
-  },
-  {
-    "window": "June 15 – July 19 (Early Summer Curing Transition)",
-    "region_id": "med-east",
-    "risk_score": 76,
-    "drivers": [
-      "Rapid herbaceous fuel curing following spring growth",
-      "Subtropical ridge intrusion across Eastern Mediterranean"
-    ],
-    "start_month": 6,
-    "end_month": 7
-  },
-  {
-    "window": "October 05 – November 15 (Offshore Wind Season)",
-    "region_id": "west-na",
-    "risk_score": 78,
-    "drivers": [
-      "Santa Ana & Diablo katabatic offshore wind events",
-      "Delayed onset of autumn Pacific storm track precipitation"
-    ],
-    "start_month": 10,
+    "start_month": 9,
     "end_month": 11
+  },
+  {
+    "window": "April 15 – May 31 (Spring MAM Wheat & Sugarcane Harvest Window)",
+    "region_id": "nile-valley",
+    "risk_score": 88,
+    "drivers": [
+      "Spring wheat, barley & sugarcane harvest residue clearing along the Nile corridor (B25N_32E Luxor/Qena to B30N_31E)",
+      "Secondary national peak in May (May 2023 FAI = 159.3, May 2024 FAI = 113.1, May 2025 FAI = 97.6)",
+      "Strong daytime detection share during 10:00–12:00 UTC (12:00–14:00 Cairo local time) overpass window"
+    ],
+    "start_month": 4,
+    "end_month": 5
+  },
+  {
+    "window": "Year-Round Persistent Type 2 Static Thermal Flare Baseline",
+    "region_id": "western-coast",
+    "risk_score": 84,
+    "drivers": [
+      "267 persistent 0.05° static thermal source cells generating 168,263 detections (65.6–69.3% of raw VIIRS rows)",
+      "Concentrated in West Alexandria (G622_596: 1,069 days), Matrouh basins (B30N_26E/27E), and Western Desert facilities",
+      "33.4% of Type 0 candidate cell-days fall within 3×3 cells of static sources, requiring excl3x3 sensitivity tracking"
+    ],
+    "start_month": 1,
+    "end_month": 12
+  },
+  {
+    "window": "Year-Round Suez Gulf & Red Sea Petrochemical / Industrial Corridor",
+    "region_id": "red-sea-sinai",
+    "risk_score": 79,
+    "drivers": [
+      "Persistent industrial, cement & gas-flaring thermal anomalies in B30N_32E (1,978 cell-days) and B29N_32E (1,929 cell-days)",
+      "1,223 Type 3 offshore/coastal water detections separated from inland Type 0 vegetation candidates during Phase 3",
+      "Requires 0.05° grid deduplication and static-source neighborhood diagnostics"
+    ],
+    "start_month": 1,
+    "end_month": 12
   }
 ]

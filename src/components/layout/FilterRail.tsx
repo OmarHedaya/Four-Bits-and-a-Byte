@@ -21,11 +21,11 @@ const SENSOR_OPTIONS: ReadonlyArray<ToggleOption<SensorFilter>> = [
 ];
 
 const METRIC_OPTIONS: ReadonlyArray<ToggleOption<MetricFilter>> = [
-  { value: 'count', label: 'Hotspot count' },
+  { value: 'count', label: 'Cell-days / count' },
   { value: 'frp', label: 'Radiative power (MW)' },
 ];
 
-const AVAILABLE_YEARS = ['2021', '2022', '2023', '2024', '2025'] as const;
+const AVAILABLE_YEARS = ['2023', '2024', '2025'] as const;
 
 export function FilterRail({ regions }: FilterRailProps) {
   const regionId = useFilterStore((s) => s.regionId);

@@ -1,0 +1,5 @@
+cluster_scope,percentile,threshold_days,n_active_cells,n_high_cells,n_clusters,n_single_cell_clusters,high_cells_share_of_cell_days
+all_years,95.0,48.0,3596,184,96,65,0.364623313959864
+2023,95.0,24.0,2652,137,67,46,0.34491566008620234
+2024,95.0,18.75,2686,135,74,52,0.3313864737505807
+2025,95.0,15.0,2475,139,89,62,0.378014486578611

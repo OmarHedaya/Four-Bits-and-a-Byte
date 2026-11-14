@@ -1,0 +1,22 @@
+check,passed,detail
+"VIIRS vegetation cell-days are unique per (date, cell)",True,
+"spatial_cells total cell-days == unique VIIRS veg (date, cell) rows",True,45595 vs 45595
+spatial_cells has one row per grid_cell_id,True,
+cell-days never exceed raw detections,True,45595 cell-days <= 81232 detections
+sensor_day veg detections == raw rows [MODIS],True,3457 vs 3457
+sensor_day veg detections == raw rows [NOAA20],True,29329 vs 29329
+sensor_day veg detections == raw rows [NOAA21],True,23989 vs 23989
+sensor_day veg detections == raw rows [SNPP],True,27914 vs 27914
+sensor_profile n_rows sums to total harmonized rows,True,254175 vs 254175
+type 0 + 2 + 3 + other == total rows,True,
+observed days in sensor_day == observed days in coverage calendar,True,
+every sensor-day has exactly one coverage row,True,
+daily_summary has one row per date,True,
+VIIRS union cells <= sum of sensor cells and >= max sensor cells,True,
+union excl. static <= union (any-year and same-year),True,
+regional blocks total cell-days == spatial_cells total,True,
+block ids are strings,True,
+cluster shares per scope are <= 1,True,
+matched-day counts identical across years per series,True,
+"series_daily has one row per (series, date)",True,
+no infinite values in any table,True,

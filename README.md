@@ -1,107 +1,82 @@
-# FIRMS Harmonizer — MODIS & VIIRS Active-Fire Intelligence
+# MODIS & VIIRS Harmonizer — FireScope Egypt (2023–2025)
 
-**NASA Space Apps Challenge 2026 — "Harmonization of MODIS and VIIRS Hot Spots"**  
-**Team**: Four-Bits-and-a-Byte
+**Full-Stack Orbital Active-Fire Harmonization, Fire Activity Index (FAI), and Mission-Control Web Application**
 
-An orbital mission-control web application that unifies active-fire hotspot detections from **MODIS** (~1 km, Terra/Aqua) and **VIIRS** (~375 m, Suomi-NPP/NOAA-20/21) around a multi-year **Fire-Activity Calendar Heatmap**, paired with a **MapLibre GL** dark WebGL map, **Seasonality & Sensor Comparison** charts, an **Anomalies & High-Risk Periods** intelligence panel, **Audience Mode** presets (`Responder`, `Scientist`, `Planner`), and a transparent **Method & Validation** walkthrough.
-
----
-
-## 1. Quick Start & Scripts
-
-### Prerequisites
-- **Node.js** `>= 20.x` and **npm** `>= 10.x`
-
-### Install & Run Locally
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Start the Vite development server (http://localhost:5173)
-npm run dev
-```
-
-### Verification & Build Scripts
-```bash
-# Type-check with TypeScript (strict mode, zero any-types)
-npm run typecheck
-
-# Lint with ESLint
-npm run lint
-
-# Run unit & end-to-end smoke tests with Vitest + Testing Library
-npm run test
-
-# Build optimized production bundle into dist/
-npm run build
-
-# Preview production build locally
-npm run preview
-```
+Built by **Team Four-Bits-and-a-Byte** for the NASA Space Apps Challenge.
 
 ---
 
-## 2. Environment Variables & Swapping Mock Data for Real Data
+## 1. Project Overview
 
-Copy [.env.example](file:///d:/Hackathon/Four-Bits-and-a-Byte/.env.example) to `.env`:
+**FireScope (`MODIS & VIIRS Harmonizer`)** unifies **254,175 archival NASA FIRMS thermal anomaly detections** across **Egypt (2023–2025)** from four orbital instruments across two sensor families:
 
-```ini
-VITE_USE_MOCK=true
-VITE_DATA_BASE_URL=/sample-data
-VITE_BASEMAP_STYLE_URL=https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json
-VITE_MAP_KEY=
-VITE_PROJECT_NAME=FIRMS Harmonizer
-VITE_TAGLINE=Unified MODIS & VIIRS Active-Fire Intelligence
-```
+- **MODIS (`Terra & Aqua`, Collection 6.1, ~1,000 m nadir resolution)**: `4,127` harmonized rows (`3,457` Type 0 vegetation-fire candidates, `665` Type 2 persistent static sources, `5` Type 3 water detections).
+- **VIIRS (`Suomi-NPP`, `NOAA-20`, and `NOAA-21`, ~375 m I-band resolution)**: `250,048` harmonized rows (`81,232` Type 0 vegetation-fire candidates, `167,598` Type 2 persistent static sources, `1,218` Type 3 water detections).
 
-### How to Replace Mock Data with Real Harmonized Files (Zero UI Changes)
-1. Have the Data / Backend team export the 8 harmonized JSON/GeoJSON files following the exact schema documented in [docs/DATA_CONTRACT.md](file:///d:/Hackathon/Four-Bits-and-a-Byte/docs/DATA_CONTRACT.md):
-   - `daily_summary.json`
-   - `grid_cells.geojson`
-   - `recent_points.json`
-   - `seasonality.json`
-   - `anomalies.json`
-   - `risk_periods.json`
-   - `validation.json`
-   - `region_meta.json`
-2. Place those files inside `public/sample-data/` (or host them on an API/CDN endpoint).
-3. Set `VITE_USE_MOCK=false` and `VITE_DATA_BASE_URL=/sample-data` (or your API base URL) in `.env`.
-4. The data loader ([src/data/loaders.ts](file:///d:/Hackathon/Four-Bits-and-a-Byte/src/data/loaders.ts)) automatically fetches all 8 endpoints, validates every record at runtime using Zod ([src/contracts/schemas.ts](file:///d:/Hackathon/Four-Bits-and-a-Byte/src/contracts/schemas.ts)), removes the `"Demo data"` badge, and populates all 5 screens without changing a single line of component code.
+Instead of naively summing raw pixel detections across sensors of different spatial resolutions, FireScope:
+1. Maps all records onto a common **`0.05° × 0.05°` (~5 km) spatial grid** (`3,596` active vegetation-candidate cells and `267` persistent static thermal cells) and a **1,096-day × 4-sensor coverage calendar**.
+2. Separates **Type 0 vegetation fire candidates** (`84,689` rows) from **Type 2 persistent industrial / gas-flaring static heat sources** (`168,263` rows).
+3. Computes the coverage-normalized **Phase 5 Fire Activity Index (FAI)** anchored to **Frozen Baseline `v1`** (`B = 32.4975` cell-days/day across `337` matched calendar dates per year for the `NOAA-20 ∪ S-NPP` headline union), alongside explicit **static-source `3×3` neighborhood exclusion (`N20_SNPP_excl3x3_all`)** and **low-confidence exclusion (`N20_SNPP_core_excl_low`)** sensitivity series.
 
 ---
 
-## 3. Architecture & Screens
+## 2. Repository Structure
 
 ```text
-src/
-├── config/placeholders.ts        # Single source of truth for all 12 placeholder groups & tokens
-├── contracts/schemas.ts          # Zod runtime validators + TypeScript types
-├── data/
-│   ├── mockGenerator.ts          # Deterministic seeded (mulberry32) 5-year, 4-region generator
-│   ├── loaders.ts                # Environment-switched data fetcher (VITE_USE_MOCK)
-│   └── selectors.ts              # Memoized daily, monthly, regional, and KPI selectors
-├── store/useFilterStore.ts       # Zustand global state (region, years, sensor, metric, audienceMode)
-├── components/
-│   ├── ui/                       # Button, Select, Toggle, Card, Badge, Tooltip, EmptyState
-│   └── layout/                   # AppShell, TopBar, FilterRail
-├── features/
-│   ├── calendar/                 # CalendarHeatmap (D3 + SVG), KPIStrip
-│   ├── map/                      # FireMap (MapLibre GL), TimeSlider
-│   ├── charts/                   # SeasonalityMatrixChart, SensorComparisonChart
-│   └── anomalies/                # AnomalyRiskPanel, AudienceModeBanner
-└── pages/
-    ├── OverviewPage.tsx          # Screen 1: Hero Calendar + KPIs + Map + Charts + Anomaly Panel
-    ├── ExplorePage.tsx           # Screen 2: Full-viewport MapLibre GL explorer + linked timeline
-    ├── PatternsPage.tsx          # Screen 3: Month × Year seasonality matrix & anomaly catalog
-    ├── MethodPage.tsx            # Screen 4: 4-step harmonization pipeline, scatter & limitations
-    └── AboutPage.tsx             # Screen 5: Team, MODIS/VIIRS specs, credits & scope
+Four-Bits-and-a-Byte/
+├── backend/                              # Python Phase 1–6 FireScope Pipeline & REST API
+│   ├── api_server.py                     # REST API serving Phase 4/5/6 CSVs, JSONs & reports
+│   ├── main.py                           # CLI runner for Phases 1–6
+│   ├── requirements.txt                  # Python scientific dependencies
+│   ├── src/                              # Phase 1–6 Python modules
+│   │   ├── config.py
+│   │   ├── data_cleaning.py              # Phase 2 cleaning & validation
+│   │   ├── harmonize.py                  # Phase 3 0.05° grid & coverage calendar
+│   │   ├── phase4_analysis.py            # Phase 4 spatio-temporal & static source analytics
+│   │   ├── phase5_index.py               # Phase 5 Fire Activity Index (FAI) & Baseline v1
+│   │   └── phase6_visualization.py       # Phase 6 26 PNG + 2 HTML visualization generator
+│   ├── data/
+│   │   ├── analysis/                     # 31 Phase 4 CSV/JSON analytical tables
+│   │   ├── index/                        # 18 Phase 5 FAI CSV tables & baseline_v1.json
+│   │   └── visualizations/               # 28 Phase 6 PNG/HTML figures & phase6_manifest.json
+│   ├── reports/                          # Phase 0–6 Markdown scientific & audit reports
+│   ├── docs/data_dictionary.md           # Full schema & column dictionary
+│   └── tests/                            # Pytest suite for Phases 2–6
+├── scripts/
+│   └── build_firescope_frontend_data.mjs # Compiles backend CSV/JSONs into frontend contracts
+├── public/
+│   ├── sample-data/                      # Zod-validated JSON/GeoJSON frontend contracts
+│   └── visualizations/                   # Static served Phase 6 PNG & Folium HTML figures
+└── src/                                  # React 19 + TypeScript + MapLibre GL + D3 + Recharts UI
+    ├── components/                       # Layout shell, TopBar, FilterRail, and UI primitives
+    ├── config/placeholders.ts            # Single source of truth for endpoints & rules
+    ├── contracts/schemas.ts              # Runtime Zod schemas for all data contracts
+    ├── data/                             # Data loaders, selectors & embedded Egypt bundles
+    ├── features/                         # CalendarHeatmap, FireMap, Charts, Anomaly panels
+    └── pages/                            # Overview, Explore, Patterns, Method, Atlas, About
 ```
 
 ---
 
-## 4. Deployment (Vercel & Netlify)
+## 3. Quick Start
 
-Both [vercel.json](file:///d:/Hackathon/Four-Bits-and-a-Byte/vercel.json) and [netlify.toml](file:///d:/Hackathon/Four-Bits-and-a-Byte/netlify.toml) are pre-configured with SPA routing rewrites and immutable asset caching.
+### Frontend Web Application
+```bash
+npm install
+npm run data:sync   # Recompiles public/sample-data/ & embedded bundles from backend/data/
+npm run dev         # Starts Vite mission-control UI at http://localhost:5173
+```
 
-- **Vercel**: Import the GitHub repository in Vercel; it automatically detects Vite (`npm run build`, output directory `dist`).
-- **Netlify**: Connect the repository in Netlify (`npm run build`, publish directory `dist`).
+### Optional Backend REST API Server
+```bash
+npm run backend:api
+# Serves http://127.0.0.1:8000/api/firescope/health (proxied automatically by Vite)
+```
+
+### Quality & Verification Checks
+```bash
+npm run typecheck   # TypeScript strict check
+npm run lint        # ESLint check
+npm run test        # Vitest unit, schema & end-to-end smoke tests
+npm run build       # Full data sync + production bundle build
+```

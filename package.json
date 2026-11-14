@@ -6,7 +6,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/build_firescope_frontend_data.mjs && tsc -b && vite build",
+    "data:sync": "node scripts/build_firescope_frontend_data.mjs",
+    "backend:api": "python backend/api_server.py",
+    "backend:pipeline": "python backend/main.py",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "test": "vitest run",

@@ -28,6 +28,16 @@ export const DailySummaryRecordSchema = z.object({
   total_frp: z.number().nonnegative(),
   high_conf_share: z.number().min(0).max(1),
   anomaly_z: z.number(),
+  fai_daily: z.number().nullable().optional(),
+  fai_excl3x3_daily: z.number().nullable().optional(),
+  headline_cell_days: z.number().nonnegative().optional(),
+  excl3x3_cell_days: z.number().nonnegative().optional(),
+  static_detections: z.number().nonnegative().optional(),
+  static_cells: z.number().nonnegative().optional(),
+  noaa20_count: z.number().nonnegative().optional(),
+  noaa21_count: z.number().nonnegative().optional(),
+  snpp_count: z.number().nonnegative().optional(),
+  usable_day: z.boolean().optional(),
 });
 
 export const DailySummaryListSchema = z.array(DailySummaryRecordSchema);
@@ -45,6 +55,20 @@ export const GridCellPropertiesSchema = z.object({
   frp_sum: z.number().nonnegative(),
   count: z.number().int().nonnegative(),
   region_id: z.string().optional(),
+  block_id_1deg: z.string().optional(),
+  veg_cell_days_2023: z.number().nonnegative().optional(),
+  veg_cell_days_2024: z.number().nonnegative().optional(),
+  veg_cell_days_2025: z.number().nonnegative().optional(),
+  raw_detections: z.number().nonnegative().optional(),
+  static_cell_days: z.number().nonnegative().optional(),
+  has_static_same_cell: z.boolean().optional(),
+  static_in_3x3: z.boolean().optional(),
+  nearest_static_km: z.number().nonnegative().optional(),
+  hotspot_cluster_id: z.string().nullable().optional(),
+  cell_type: z.enum(['veg_candidate', 'static_source', 'both']).optional(),
+  first_date: z.string().optional(),
+  last_date: z.string().optional(),
+  static_detections_total: z.number().nonnegative().optional(),
 });
 
 export type GridCellRecord = z.infer<typeof GridCellPropertiesSchema>;
@@ -84,6 +108,11 @@ export const RecentPointRecordSchema = z.object({
   frp: z.number().nonnegative(),
   confidence: ConfidenceLevelSchema,
   region_id: z.string().optional(),
+  instrument: z.string().optional(),
+  daynight: z.string().optional(),
+  source_type: z.string().optional(),
+  cell_days: z.number().nonnegative().optional(),
+  block_ids: z.string().optional(),
 });
 
 export const RecentPointsListSchema = z.array(RecentPointRecordSchema);
@@ -101,6 +130,11 @@ export const SeasonalityRecordSchema = z.object({
   count_modis: z.number().int().nonnegative().optional(),
   count_viirs: z.number().int().nonnegative().optional(),
   region_id: z.string().optional(),
+  fai: z.number().nullable().optional(),
+  fai_sa: z.number().nullable().optional(),
+  fai_excl3x3: z.number().nullable().optional(),
+  kappa: z.number().optional(),
+  quality_label: z.string().optional(),
 });
 
 export const SeasonalityListSchema = z.array(SeasonalityRecordSchema);
